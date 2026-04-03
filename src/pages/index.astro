@@ -1,0 +1,138 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { fetchUserProfile, fetchUserRepos, computeLanguageStats } from "../lib/github";
+import type { ProjectsConfig } from "../lib/types";
+import projectsConfig from "../data/projects.json";
+
+const config = projectsConfig as ProjectsConfig;
+
+let profile = null;
+let featuredRepos = [];
+let topLanguages = [];
+
+try {
+  profile = await fetchUserProfile();
+  const allRepos = await fetchUserRepos();
+
+  // Filter out hidden, archived, and forked repos
+  const visibleRepos = allRepos.filter(
+    (r) => !r.isArchived && !r.isFork && !config.hidden.includes(r.name)
+  );
+
+  // Get featured repos or top repos by stars
+  if (config.featured.length > 0) {
+    featuredRepos = config.featured
+      .map((f) => visibleRepos.find((r) => r.name === f.repoName))
+      .filter(Boolean)
+      .slice(0, 4);
+  }
+
+  if (featuredRepos.length === 0) {
+    featuredRepos = visibleRepos
+      .sort((a, b) => b.stargazerCount - a.stargazerCount || new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, 4);
+  }
+
+  topLanguages = computeLanguageStats(visibleRepos).slice(0, 8);
+} catch (e) {
+  console.error("Failed to fetch GitHub data:", e);
+}
+---
+
+<BaseLayout title="Home" description="Allen — NTU Biochem M.S. Lab automation, bio-image analysis, and Python scripting projects.">
+  <!-- Hero -->
+  <Hero
+    name={profile?.name || "allenphant"}
+    bio={profile?.bio || null}
+    avatarUrl={profile?.avatarUrl || "https://github.com/allenphant.png"}
+  />
+
+  <!-- Featured Projects -->
+  <section class="py-24">
+    <div class="section-container">
+      <div class="flex items-end justify-between mb-12">
+        <div>
+          <h2 class="text-3xl font-bold text-white mb-2" style="font-family: var(--font-heading);">Featured Projects</h2>
+          <p class="text-gray-400">Research tools & side projects</p>
+        </div>
+        <a
+          href="/projects"
+          class="text-sm text-primary-400 hover:text-primary-300 transition-colors hidden sm:flex items-center gap-1"
+        >
+          View all
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+
+      {featuredRepos.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {featuredRepos.map((repo: any) => (
+            <ProjectCard repo={repo} />
+          ))}
+        </div>
+      ) : (
+        <div class="glass p-12 text-center">
+          <p class="text-gray-400">
+            Projects will appear here once the GitHub API is connected.
+            <br />
+            <span class="text-sm text-gray-500 mt-2 block">
+              Add your <code class="text-primary-400">GITHUB_PAT</code> to the <code class="text-primary-400">.env</code> file to get started.
+            </span>
+          </p>
+        </div>
+      )}
+
+      <a
+        href="/projects"
+        class="mt-6 text-sm text-primary-400 hover:text-primary-300 transition-colors flex sm:hidden items-center gap-1 justify-center"
+      >
+        View all projects
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Skills Overview -->
+  {topLanguages.length > 0 && (
+    <section class="py-24 border-t border-white/5">
+      <div class="section-container">
+        <div class="flex items-end justify-between mb-12">
+          <div>
+            <h2 class="text-3xl font-bold text-white mb-2" style="font-family: var(--font-heading);">Skills</h2>
+            <p class="text-gray-400">Tools & languages I work with</p>
+          </div>
+          <a
+            href="/skills"
+            class="text-sm text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1"
+          >
+            See details
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {topLanguages.map((lang: any) => (
+            <div class="glass p-4 flex items-center gap-3">
+              <span
+                class="w-3 h-3 rounded-full shrink-0"
+                style={`background-color: ${lang.color}`}
+              ></span>
+              <div class="min-w-0">
+                <div class="text-sm font-medium text-gray-200 truncate">{lang.name}</div>
+                <div class="text-xs text-gray-500">{lang.percentage}%</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+</BaseLayout>

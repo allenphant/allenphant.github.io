@@ -1,0 +1,47 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import ProjectSearch from "../components/ProjectSearch";
+import { fetchUserRepos } from "../lib/github";
+import type { ProjectsConfig } from "../lib/types";
+import projectsConfig from "../data/projects.json";
+
+const config = projectsConfig as ProjectsConfig;
+
+let repos = [];
+
+try {
+  const allRepos = await fetchUserRepos();
+  repos = allRepos.filter(
+    (r) => !r.isArchived && !r.isFork && !config.hidden.includes(r.name)
+  );
+} catch (e) {
+  console.error("Failed to fetch repos:", e);
+}
+---
+
+<BaseLayout title="Projects" description="Explore all of allenphant's open source projects and repositories.">
+  <section class="py-24">
+    <div class="section-container">
+      <div class="mb-12">
+        <h1 class="text-4xl font-bold text-white mb-3">Projects</h1>
+        <p class="text-gray-400 text-lg">
+          All my public repositories, pulled directly from GitHub.
+        </p>
+      </div>
+
+      {repos.length > 0 ? (
+        <ProjectSearch client:load repos={repos} />
+      ) : (
+        <div class="glass p-12 text-center">
+          <p class="text-gray-400">
+            Projects will appear here once the GitHub API is connected.
+            <br />
+            <span class="text-sm text-gray-500 mt-2 block">
+              Add your <code class="text-primary-400">GITHUB_PAT</code> to the <code class="text-primary-400">.env</code> file.
+            </span>
+          </p>
+        </div>
+      )}
+    </div>
+  </section>
+</BaseLayout>

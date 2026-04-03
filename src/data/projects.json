@@ -1,0 +1,21 @@
+{
+  "featured": [
+    {
+      "repoName": "DropSeq-Droplet-Analyzer",
+      "customDescription": "Drop-seq single-cell sequencing QC tool — reduced manual inspection from 60 min/image to 30 sec/image using Python & OpenCV."
+    },
+    {
+      "repoName": "Flow-Cytometry-NNPlot-Automator",
+      "customDescription": "Auto-formats flow cytometry data into publication-ready N-by-N statistical plots using Python & VBA."
+    },
+    {
+      "repoName": "Gel-Image-Auto-Cropper",
+      "customDescription": "Auto-detects and crops gel electrophoresis bands, standardizing image format for publication."
+    },
+    {
+      "repoName": "MyGo-Meme-Bot",
+      "customDescription": "LINE chatbot powered by Google Apps Script + Sheets with keyword fuzzy search for meme responses."
+    }
+  ],
+  "hidden": []
+}

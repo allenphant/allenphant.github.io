@@ -1,0 +1,91 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SkillChart from "../components/SkillChart";
+import { fetchUserRepos, computeLanguageStats } from "../lib/github";
+import type { ProjectsConfig } from "../lib/types";
+import projectsConfig from "../data/projects.json";
+
+const config = projectsConfig as ProjectsConfig;
+
+let languageStats: any[] = [];
+let repoCount = 0;
+
+try {
+  const allRepos = await fetchUserRepos();
+  const visibleRepos = allRepos.filter(
+    (r) => !r.isArchived && !r.isFork && !config.hidden.includes(r.name)
+  );
+  repoCount = visibleRepos.length;
+  languageStats = computeLanguageStats(visibleRepos);
+} catch (e) {
+  console.error("Failed to fetch skills data:", e);
+}
+
+// Manually curated skill categories (customize these!)
+const skillCategories = [
+  {
+    title: "Molecular Biology",
+    skills: ["PCR", "Cloning", "Single-cell Sequencing (Drop-seq / 10x)", "Gel Electrophoresis"],
+  },
+  {
+    title: "Cell & Animal Models",
+    skills: ["Mice Handling", "Cell Culture", "Flow Cytometry"],
+  },
+  {
+    title: "Programming & Automation",
+    skills: ["Python", "OpenCV", "Pandas", "PyAutoGUI", "Google Apps Script", "VBA"],
+  },
+  {
+    title: "Bio-Statistics & Analysis",
+    skills: ["scRNA-seq Analysis", "scATAC-seq Analysis", "Seaborn", "Image Processing"],
+  },
+];
+---
+
+<BaseLayout title="Skills" description="Allen's skills — molecular biology, Python automation, bio-image analysis, and single-cell sequencing.">
+  <section class="py-24">
+    <div class="section-container">
+      <div class="mb-16">
+        <h1 class="text-4xl font-bold text-white mb-3" style="font-family: var(--font-heading);">Skills</h1>
+        <p class="text-gray-400 text-lg">
+          Language distribution across {repoCount} public repositories, analyzed from GitHub.
+        </p>
+      </div>
+
+      {/* Language Distribution Chart */}
+      {languageStats.length > 0 ? (
+        <div class="glass p-8 sm:p-12 mb-16">
+          <h2 class="text-xl font-semibold text-white mb-8">Language Distribution</h2>
+          <SkillChart client:load languages={languageStats} />
+        </div>
+      ) : (
+        <div class="glass p-12 text-center mb-16">
+          <p class="text-gray-400">
+            Language data will appear once the GitHub API is connected.
+          </p>
+        </div>
+      )}
+
+      {/* Skill Categories */}
+      <div>
+        <h2 class="text-xl font-semibold text-white mb-8">Technologies</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {skillCategories.map((category) => (
+            <div class="glass p-6">
+              <h3 class="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-4">
+                {category.title}
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                {category.skills.map((skill) => (
+                  <span class="px-3 py-1.5 text-sm text-gray-300 bg-white/5 border border-white/10 rounded-lg">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

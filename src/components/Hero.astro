@@ -1,0 +1,127 @@
+---
+interface Props {
+  name: string;
+  bio: string | null;
+  avatarUrl: string;
+}
+
+const { name, bio, avatarUrl } = Astro.props;
+---
+
+<section class="relative min-h-[90vh] flex items-center overflow-hidden">
+  <!-- Background gradient orbs -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-primary-500/20 rounded-full blur-[120px] motion-safe:animate-pulse"></div>
+    <div class="absolute top-1/3 -right-20 w-80 h-80 bg-accent-500/15 rounded-full blur-[100px] motion-safe:animate-pulse" style="animation-delay: 1s;"></div>
+    <div class="absolute -bottom-20 left-1/3 w-72 h-72 bg-primary-700/20 rounded-full blur-[100px] motion-safe:animate-pulse" style="animation-delay: 2s;"></div>
+    <!-- Grid pattern -->
+    <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
+  </div>
+
+  <div class="section-container relative z-10 w-full">
+    <div class="max-w-3xl">
+      <!-- Greeting -->
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-12 h-12 rounded-full overflow-hidden ring-2 ring-primary-500/30">
+          <img src={avatarUrl} alt={name || "Avatar"} class="w-full h-full object-cover" loading="eager" />
+        </div>
+        <span class="text-gray-400 text-sm font-medium">Hello, I'm</span>
+      </div>
+
+      <!-- Name -->
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-4" style="font-family: var(--font-heading);">
+        <span class="gradient-text">{name || "allenphant"}</span>
+      </h1>
+
+      <!-- Typing effect roles -->
+      <div class="h-10 mb-6">
+        <span class="text-xl sm:text-2xl text-gray-400 font-light">
+          <span id="typed-text"></span>
+          <span class="animate-pulse text-primary-400">|</span>
+        </span>
+      </div>
+
+      <!-- Bio -->
+      {bio && (
+        <p class="text-lg text-gray-400 max-w-xl leading-relaxed mb-10">
+          {bio}
+        </p>
+      )}
+
+      <!-- CTA buttons -->
+      <div class="flex flex-wrap gap-4">
+        <a
+          href="/projects"
+          class="px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-600/25 hover:shadow-primary-500/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-surface-950"
+        >
+          View Projects
+        </a>
+        <a
+          href="/contact"
+          class="px-6 py-3 glass-hover text-gray-300 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-surface-950"
+        >
+          Get in Touch
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const roles = [
+    "Automation Enthusiast",
+    "Python Scripting for Life",
+    "Wet Lab meets Dry Lab",
+    "Saving Time, One Script at a Time",
+  ];
+
+  const typedEl = document.getElementById("typed-text");
+
+  // Respect reduced motion: show static text instead
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (typedEl) typedEl.textContent = roles[0];
+  } else {
+    let roleIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timer: number;
+
+    function type() {
+      if (!typedEl) return;
+
+      const currentRole = roles[roleIndex];
+
+      if (isDeleting) {
+        typedEl.textContent = currentRole.substring(0, charIndex - 1);
+        charIndex--;
+      } else {
+        typedEl.textContent = currentRole.substring(0, charIndex + 1);
+        charIndex++;
+      }
+
+      let delay = isDeleting ? 40 : 80;
+
+      if (!isDeleting && charIndex === currentRole.length) {
+        delay = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        roleIndex = (roleIndex + 1) % roles.length;
+        delay = 400;
+      }
+
+      timer = window.setTimeout(type, delay);
+    }
+
+    // Pause when tab is hidden to avoid memory leak
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        clearTimeout(timer);
+      } else {
+        type();
+      }
+    });
+
+    type();
+  }
+</script>
