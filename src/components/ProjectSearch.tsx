@@ -111,7 +111,7 @@ export default function ProjectSearch({ repos }: Props) {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#D9D0C8] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
           />
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function ProjectSearch({ repos }: Props) {
               className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
                 !selectedType
                   ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
-                  : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                  : "bg-white text-[#5A5A5A] border-[#D9D0C8] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
               }`}
             >
               All
@@ -139,7 +139,7 @@ export default function ProjectSearch({ repos }: Props) {
                 className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
                   selectedType === type
                     ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
-                    : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                    : "bg-white text-[#5A5A5A] border-[#D9D0C8] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
                 }`}
               >
                 {type}
@@ -157,7 +157,7 @@ export default function ProjectSearch({ repos }: Props) {
               className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
                 !selectedStatus
                   ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
-                  : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                  : "bg-white text-[#5A5A5A] border-[#D9D0C8] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
               }`}
             >
               All
@@ -169,7 +169,7 @@ export default function ProjectSearch({ repos }: Props) {
                 className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
                   selectedStatus === status
                     ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
-                    : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                    : "bg-white text-[#5A5A5A] border-[#D9D0C8] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
                 }`}
               >
                 {status}
@@ -186,7 +186,7 @@ export default function ProjectSearch({ repos }: Props) {
             className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
               !selectedLang
                 ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
-                : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                : "bg-white text-[#5A5A5A] border-[#D9D0C8] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
             }`}
           >
             All
@@ -198,7 +198,7 @@ export default function ProjectSearch({ repos }: Props) {
               className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] flex items-center gap-1.5 ${
                 selectedLang === lang.name
                   ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
-                  : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                  : "bg-white text-[#5A5A5A] border-[#D9D0C8] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
               }`}
             >
               <span className="w-2 h-2 rounded-full" style={{ backgroundColor: lang.color }} />
@@ -250,7 +250,7 @@ export default function ProjectSearch({ repos }: Props) {
                   </h3>
                   <div className="flex items-center gap-2 shrink-0">
                     {statusTag && (
-                      <span className="px-2 py-0.5 text-[10px] font-light text-[#5A5A5A] bg-[#FAF9F6] border border-[#E5E7EB] rounded-[2px] tracking-wide">
+                      <span className="px-2 py-0.5 text-[10px] font-light text-[#5A5A5A] bg-[#E8DDD4] border border-[#D9D0C8] rounded-[2px] tracking-wide">
                         {statusTag}
                       </span>
                     )}
@@ -307,7 +307,7 @@ export default function ProjectSearch({ repos }: Props) {
                     {typeTags.slice(0, 4).map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 text-[10px] font-light text-[#5A5A5A] bg-[#FAF9F6] border border-[#E5E7EB] rounded-[2px] tracking-wide"
+                        className="px-2 py-0.5 text-[10px] font-light text-[#5A5A5A] bg-[#E8DDD4] border border-[#D9D0C8] rounded-[2px] tracking-wide"
                       >
                         {tag}
                       </span>

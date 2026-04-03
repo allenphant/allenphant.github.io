@@ -13,14 +13,14 @@ const { name, bio, avatarUrl } = Astro.props;
     <div class="max-w-2xl">
       <!-- Greeting -->
       <div class="flex items-center gap-3 mb-8">
-        <div class="w-10 h-10 rounded-full overflow-hidden ring-1 ring-[#E5E7EB]">
+        <div class="w-10 h-10 rounded-full overflow-hidden ring-1 ring-[#D9D0C8]">
           <img src={avatarUrl} alt={name || "Avatar"} class="w-full h-full object-cover" loading="eager" />
         </div>
         <span class="text-sm text-[#9CA3AF] font-light tracking-wider">Hello, I'm</span>
       </div>
 
       <!-- Name -->
-      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-light tracking-tight text-[#2D2D2D] mb-4">
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-serif italic font-light tracking-tight text-[#2D2D2D] mb-4">
         {name || "allenphant"}
       </h1>
 
@@ -39,7 +39,7 @@ const { name, bio, avatarUrl } = Astro.props;
       )}
 
       <!-- Divider -->
-      <div class="w-12 h-px bg-[#E5E7EB] mb-10"></div>
+      <div class="w-12 h-px bg-[#D9D0C8] mb-10"></div>
 
       <!-- CTA buttons -->
       <div class="flex flex-wrap gap-3">
@@ -51,7 +51,7 @@ const { name, bio, avatarUrl } = Astro.props;
         </a>
         <a
           href="/contact"
-          class="px-6 py-2.5 border border-[#E5E7EB] hover:border-[#2D2D2D] text-[#5A5A5A] hover:text-[#2D2D2D] text-sm font-light tracking-wide rounded-[4px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] focus:ring-offset-2"
+          class="px-6 py-2.5 border border-[#D9D0C8] hover:border-[#2D2D2D] text-[#5A5A5A] hover:text-[#2D2D2D] text-sm font-light tracking-wide rounded-[4px] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] focus:ring-offset-2"
         >
           Get in Touch
         </a>

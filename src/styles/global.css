@@ -2,8 +2,8 @@
 
 @theme {
   /* Colors — light mode */
-  --color-bg-primary: #FFFFFF;
-  --color-bg-secondary: #FAF9F6;
+  --color-bg-primary: #F0EAE2;
+  --color-bg-secondary: #E8DDD4;
 
   --color-text-primary: #2D2D2D;
   --color-text-secondary: #5A5A5A;
@@ -11,11 +11,12 @@
 
   --color-accent: #C5A059;
 
-  --color-border-strong: #E5E7EB;
-  --color-border-subtle: #F3F4F6;
+  --color-border-strong: #D9D0C8;
+  --color-border-subtle: #E8DDD4;
 
   /* Typography */
   --font-sans: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", "Georgia", serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
@@ -47,14 +48,14 @@
 
 @utility card {
   background-color: #FFFFFF;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid #D9D0C8;
   border-radius: 4px;
   transition: border-color 300ms ease;
 }
 
 @utility card-hover {
   background-color: #FFFFFF;
-  border: 1px solid var(--color-border-strong);
+  border: 1px solid #D9D0C8;
   border-radius: 4px;
   transition: border-color 300ms ease;
   &:hover {

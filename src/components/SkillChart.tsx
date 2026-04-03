@@ -53,7 +53,7 @@ export default function SkillChart({ languages }: Props) {
         backgroundColor: "rgba(255, 255, 255, 0.97)",
         titleColor: "#2D2D2D",
         bodyColor: "#5A5A5A",
-        borderColor: "#E5E7EB",
+        borderColor: "#D9D0C8",
         borderWidth: 1,
         cornerRadius: 12,
         padding: 12,

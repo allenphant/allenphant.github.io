@@ -45,7 +45,7 @@ const skillCategories = [
   <section class="py-32 lg:py-40">
     <div class="section-container">
       <div class="mb-16">
-        <h1 class="text-4xl font-light text-[#2D2D2D] mb-3 tracking-wide">Skills</h1>
+        <h1 class="text-4xl font-serif italic font-light text-[#2D2D2D] mb-3 tracking-wide">Skills</h1>
         <p class="text-[#9CA3AF] text-sm font-light">
           Language distribution across {repoCount} public repositories, analyzed from GitHub.
         </p>
@@ -53,7 +53,7 @@ const skillCategories = [
 
       {/* Language Distribution Chart */}
       {languageStats.length > 0 ? (
-        <div class="card p-8 sm:p-12 mb-16 bg-[#FAF9F6]">
+        <div class="card p-8 sm:p-12 mb-16 bg-[#E8DDD4]">
           <h2 class="text-xs font-light uppercase tracking-widest text-[#9CA3AF] mb-8">Language Distribution</h2>
           <SkillChart client:load languages={languageStats} />
         </div>
@@ -76,7 +76,7 @@ const skillCategories = [
               </h3>
               <div class="flex flex-wrap gap-2">
                 {category.skills.map((skill) => (
-                  <span class="px-3 py-1.5 text-xs text-[#5A5A5A] bg-[#FAF9F6] border border-[#E5E7EB] rounded-[2px] font-light">
+                  <span class="px-3 py-1.5 text-xs text-[#5A5A5A] bg-[#E8DDD4] border border-[#D9D0C8] rounded-[2px] font-light">
                     {skill}
                   </span>
                 ))}

@@ -10,7 +10,7 @@ const navLinks = [
 const currentPath = Astro.url.pathname;
 ---
 
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#E5E7EB]">
+<nav class="fixed top-0 left-0 right-0 z-50 bg-[#F0EAE2]/95 backdrop-blur-sm border-b border-[#D9D0C8]">
   <div class="section-container flex items-center justify-between h-16">
     <!-- Logo -->
     <a href="/" class="text-base font-light tracking-widest text-[#2D2D2D] hover:text-[#C5A059] transition-colors duration-300">
@@ -50,7 +50,7 @@ const currentPath = Astro.url.pathname;
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="md:hidden hidden border-t border-[#E5E7EB] bg-white">
+  <div id="mobile-menu" class="md:hidden hidden border-t border-[#D9D0C8] bg-[#F0EAE2]">
     <div class="section-container py-4 flex flex-col gap-1">
       {navLinks.map((link) => (
         <a
