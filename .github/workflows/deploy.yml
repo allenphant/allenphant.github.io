@@ -38,8 +38,8 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          GITHUB_PAT: ${{ secrets.GH_PAT }}
-          GITHUB_USERNAME: allenphant
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GH_USERNAME: allenphant
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

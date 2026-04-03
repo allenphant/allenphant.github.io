@@ -1,8 +1,8 @@
 import { graphql } from "@octokit/graphql";
 import type { GitHubRepo, LanguageStats, UserProfile } from "./types";
 
-const USERNAME = import.meta.env.GITHUB_USERNAME || "allenphant";
-const TOKEN = import.meta.env.GITHUB_PAT;
+const USERNAME = import.meta.env.GH_USERNAME || "allenphant";
+const TOKEN = import.meta.env.GH_PAT;
 
 const graphqlWithAuth = graphql.defaults({
   headers: {
