@@ -9,12 +9,6 @@ interface Props {
 // Tags that represent project status — everything else is treated as type
 const STATUS_TAGS = ["active", "stable", "archived"];
 
-const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  active: { bg: "bg-green-500/15 border-green-500/30", text: "text-green-400" },
-  stable: { bg: "bg-blue-500/15 border-blue-500/30", text: "text-blue-400" },
-  archived: { bg: "bg-gray-500/15 border-gray-500/30", text: "text-gray-400" },
-};
-
 export default function ProjectSearch({ repos }: Props) {
   const [search, setSearch] = useState("");
   const [selectedLang, setSelectedLang] = useState<string | null>(null);
@@ -117,7 +111,7 @@ export default function ProjectSearch({ repos }: Props) {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/25 transition-all"
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#E5E7EB] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
           />
         </div>
       </div>
@@ -127,15 +121,25 @@ export default function ProjectSearch({ repos }: Props) {
         {/* Type filters */}
         {availableTypes.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium w-12 shrink-0">Type</span>
+            <span className="text-[11px] text-[#9CA3AF] uppercase tracking-widest font-light w-12 shrink-0">Type</span>
+            <button
+              onClick={() => setSelectedType(null)}
+              className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
+                !selectedType
+                  ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
+                  : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+              }`}
+            >
+              All
+            </button>
             {availableTypes.map((type) => (
               <button
                 key={type}
                 onClick={() => setSelectedType(selectedType === type ? null : type)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
                   selectedType === type
-                    ? "bg-primary-500/20 text-primary-300 border border-primary-500/30"
-                    : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
+                    ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
+                    : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
                 }`}
               >
                 {type}
@@ -147,35 +151,42 @@ export default function ProjectSearch({ repos }: Props) {
         {/* Status filters */}
         {availableStatuses.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium w-12 shrink-0">Status</span>
-            {availableStatuses.map((status) => {
-              const style = STATUS_STYLES[status];
-              return (
-                <button
-                  key={status}
-                  onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${
-                    selectedStatus === status
-                      ? `${style.bg} ${style.text}`
-                      : "bg-white/5 text-gray-400 border-white/10 hover:bg-white/10"
-                  }`}
-                >
-                  {status}
-                </button>
-              );
-            })}
+            <span className="text-[11px] text-[#9CA3AF] uppercase tracking-widest font-light w-12 shrink-0">Status</span>
+            <button
+              onClick={() => setSelectedStatus(null)}
+              className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
+                !selectedStatus
+                  ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
+                  : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+              }`}
+            >
+              All
+            </button>
+            {availableStatuses.map((status) => (
+              <button
+                key={status}
+                onClick={() => setSelectedStatus(selectedStatus === status ? null : status)}
+                className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
+                  selectedStatus === status
+                    ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
+                    : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
+                }`}
+              >
+                {status}
+              </button>
+            ))}
           </div>
         )}
 
         {/* Language filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] text-gray-500 uppercase tracking-wider font-medium w-12 shrink-0">Lang</span>
+          <span className="text-[11px] text-[#9CA3AF] uppercase tracking-widest font-light w-12 shrink-0">Lang</span>
           <button
             onClick={() => setSelectedLang(null)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+            className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
               !selectedLang
-                ? "bg-primary-500/20 text-primary-300 border border-primary-500/30"
-                : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
+                ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
+                : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
             }`}
           >
             All
@@ -183,19 +194,14 @@ export default function ProjectSearch({ repos }: Props) {
           {languages.map((lang) => (
             <button
               key={lang.name}
-              onClick={() =>
-                setSelectedLang(selectedLang === lang.name ? null : lang.name)
-              }
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
+              onClick={() => setSelectedLang(selectedLang === lang.name ? null : lang.name)}
+              className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] flex items-center gap-1.5 ${
                 selectedLang === lang.name
-                  ? "bg-primary-500/20 text-primary-300 border border-primary-500/30"
-                  : "bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10"
+                  ? "bg-[#2D2D2D] text-white border-[#2D2D2D]"
+                  : "bg-white text-[#5A5A5A] border-[#E5E7EB] hover:border-[#2D2D2D] hover:text-[#2D2D2D]"
               }`}
             >
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: lang.color }}
-              />
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: lang.color }} />
               {lang.name}
             </button>
           ))}
@@ -204,13 +210,13 @@ export default function ProjectSearch({ repos }: Props) {
 
       {/* Results count + clear */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[#9CA3AF] font-light">
           {filtered.length} project{filtered.length !== 1 ? "s" : ""} found
         </p>
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-xs text-gray-500 hover:text-primary-400 transition-colors"
+            className="text-xs text-[#9CA3AF] hover:text-[#2D2D2D] transition-colors duration-200 font-light"
           >
             Clear all filters
           </button>
@@ -223,7 +229,6 @@ export default function ProjectSearch({ repos }: Props) {
           {filtered.map((repo) => {
             const statusTag = getStatusTag(repo.topics);
             const typeTags = getTypeTags(repo.topics);
-            const statusStyle = statusTag ? STATUS_STYLES[statusTag] : null;
 
             return (
               <motion.a
@@ -235,22 +240,22 @@ export default function ProjectSearch({ repos }: Props) {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="group p-6 flex flex-col gap-3 glass-hover h-full"
+                transition={{ duration: 0.3 }}
+                className="group card-hover p-6 flex flex-col gap-3 h-full"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
-                  <h3 className="text-base font-semibold text-gray-100 group-hover:text-primary-400 transition-colors truncate">
+                  <h3 className="text-base font-normal text-[#2D2D2D] truncate tracking-wide">
                     {repo.name}
                   </h3>
                   <div className="flex items-center gap-2 shrink-0">
-                    {statusTag && statusStyle && (
-                      <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full border ${statusStyle.bg} ${statusStyle.text}`}>
+                    {statusTag && (
+                      <span className="px-2 py-0.5 text-[10px] font-light text-[#5A5A5A] bg-[#FAF9F6] border border-[#E5E7EB] rounded-[2px] tracking-wide">
                         {statusTag}
                       </span>
                     )}
                     <svg
-                      className="w-4 h-4 text-gray-500 group-hover:text-primary-400 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#2D2D2D] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -266,12 +271,12 @@ export default function ProjectSearch({ repos }: Props) {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-400 line-clamp-2 flex-1">
+                <p className="text-sm text-[#5A5A5A] line-clamp-2 flex-1 font-light leading-relaxed">
                   {repo.description || "No description provided."}
                 </p>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between text-xs text-gray-500 mt-auto">
+                <div className="flex items-center justify-between text-xs text-[#9CA3AF] mt-auto">
                   <div className="flex items-center gap-3">
                     {repo.primaryLanguage && (
                       <span className="flex items-center gap-1.5">
@@ -302,7 +307,7 @@ export default function ProjectSearch({ repos }: Props) {
                     {typeTags.slice(0, 4).map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 text-[10px] font-medium text-primary-300 bg-primary-500/10 rounded-full"
+                        className="px-2 py-0.5 text-[10px] font-light text-[#5A5A5A] bg-[#FAF9F6] border border-[#E5E7EB] rounded-[2px] tracking-wide"
                       >
                         {tag}
                       </span>

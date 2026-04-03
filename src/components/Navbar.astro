@@ -10,10 +10,10 @@ const navLinks = [
 const currentPath = Astro.url.pathname;
 ---
 
-<nav class="fixed top-4 left-4 right-4 z-50 glass border-b border-white/5 rounded-2xl">
+<nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-[#E5E7EB]">
   <div class="section-container flex items-center justify-between h-16">
     <!-- Logo -->
-    <a href="/" class="text-xl font-bold gradient-text tracking-tight">
+    <a href="/" class="text-base font-light tracking-widest text-[#2D2D2D] hover:text-[#C5A059] transition-colors duration-300">
       allenphant
     </a>
 
@@ -23,10 +23,10 @@ const currentPath = Astro.url.pathname;
         <a
           href={link.href}
           class:list={[
-            "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+            "px-4 py-2 text-sm font-light tracking-wide transition-colors duration-200",
             currentPath === link.href
-              ? "text-primary-400 bg-primary-500/10"
-              : "text-gray-400 hover:text-white hover:bg-white/5",
+              ? "text-[#2D2D2D] border-b border-[#2D2D2D]"
+              : "text-[#9CA3AF] hover:text-[#2D2D2D]",
           ]}
         >
           {link.label}
@@ -37,29 +37,29 @@ const currentPath = Astro.url.pathname;
     <!-- Mobile Hamburger -->
     <button
       id="menu-toggle"
-      class="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+      class="md:hidden p-2 text-[#9CA3AF] hover:text-[#2D2D2D] transition-colors"
       aria-label="Toggle menu"
     >
-      <svg id="menu-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      <svg id="menu-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
-      <svg id="close-icon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      <svg id="close-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
       </svg>
     </button>
   </div>
 
   <!-- Mobile Menu -->
-  <div id="mobile-menu" class="md:hidden hidden border-t border-white/5">
+  <div id="mobile-menu" class="md:hidden hidden border-t border-[#E5E7EB] bg-white">
     <div class="section-container py-4 flex flex-col gap-1">
       {navLinks.map((link) => (
         <a
           href={link.href}
           class:list={[
-            "px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200",
+            "px-4 py-3 text-sm font-light tracking-wide transition-colors duration-200",
             currentPath === link.href
-              ? "text-primary-400 bg-primary-500/10"
-              : "text-gray-400 hover:text-white hover:bg-white/5",
+              ? "text-[#2D2D2D]"
+              : "text-[#9CA3AF] hover:text-[#2D2D2D]",
           ]}
         >
           {link.label}
@@ -87,12 +87,10 @@ const currentPath = Astro.url.pathname;
     closeIcon?.classList.toggle("hidden");
   });
 
-  // Close menu on link click
   menu?.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", closeMenu);
   });
 
-  // Close menu on Escape key
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !menu?.classList.contains("hidden")) {
       closeMenu();

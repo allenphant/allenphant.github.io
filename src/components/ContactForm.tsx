@@ -52,7 +52,7 @@ export default function ContactForm() {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="name" className="block text-xs font-light uppercase tracking-widest text-[#9CA3AF] mb-2">
             Name
           </label>
           <input
@@ -60,12 +60,12 @@ export default function ContactForm() {
             id="name"
             name="name"
             required
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/25 transition-all"
+            className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
             placeholder="Your name"
           />
         </div>
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+          <label htmlFor="email" className="block text-xs font-light uppercase tracking-widest text-[#9CA3AF] mb-2">
             Email
           </label>
           <input
@@ -73,14 +73,14 @@ export default function ContactForm() {
             id="email"
             name="email"
             required
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/25 transition-all"
+            className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
             placeholder="your@email.com"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="subject" className="block text-xs font-light uppercase tracking-widest text-[#9CA3AF] mb-2">
           Subject
         </label>
         <input
@@ -88,13 +88,13 @@ export default function ContactForm() {
           id="subject"
           name="subject"
           required
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/25 transition-all"
+          className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
           placeholder="What's this about?"
         />
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
+        <label htmlFor="message" className="block text-xs font-light uppercase tracking-widest text-[#9CA3AF] mb-2">
           Message
         </label>
         <textarea
@@ -102,13 +102,13 @@ export default function ContactForm() {
           name="message"
           required
           rows={6}
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-primary-500/50 focus:ring-1 focus:ring-primary-500/25 transition-all resize-none"
+          className="w-full px-4 py-2.5 bg-white border border-[#E5E7EB] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200 resize-none"
           placeholder="Your message..."
         />
       </div>
 
       {status === "error" && (
-        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+        <div className="p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-[4px] text-[#B91C1C] text-sm font-light">
           Something went wrong. Please try again or email me directly.
         </div>
       )}
@@ -116,7 +116,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={status === "sending"}
-        className="px-8 py-3 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-all shadow-lg shadow-primary-600/25 hover:shadow-primary-500/40 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-surface-950 flex items-center gap-2"
+        className="px-6 py-2.5 bg-[#2D2D2D] hover:bg-[#404040] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-light tracking-wide rounded-[4px] transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] focus:ring-offset-2 flex items-center gap-2"
       >
         {status === "sending" && (
           <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
