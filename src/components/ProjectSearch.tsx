@@ -6,9 +6,7 @@ interface Props {
   repos: GitHubRepo[];
 }
 
-// Tags that represent project type (shown as filter chips)
-const TYPE_TAGS = ["automation", "chatbot", "game-tool", "research"];
-// Tags that represent project status (shown as badge on card)
+// Tags that represent project status — everything else is treated as type
 const STATUS_TAGS = ["active", "stable", "archived"];
 
 const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
@@ -35,12 +33,12 @@ export default function ProjectSearch({ repos }: Props) {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [repos]);
 
-  // Extract type and status tags that actually exist in the repos
+  // Type = all topics that are NOT status tags (dynamic, no hardcoded whitelist)
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
     for (const repo of repos) {
       for (const topic of repo.topics) {
-        if (TYPE_TAGS.includes(topic)) types.add(topic);
+        if (!STATUS_TAGS.includes(topic)) types.add(topic);
       }
     }
     return Array.from(types).sort();
@@ -75,12 +73,9 @@ export default function ProjectSearch({ repos }: Props) {
   const getStatusTag = (topics: string[]) =>
     topics.find((t) => STATUS_TAGS.includes(t));
 
+  // Type tags = all non-status topics (same logic as availableTypes)
   const getTypeTags = (topics: string[]) =>
-    topics.filter((t) => TYPE_TAGS.includes(t));
-
-  // Non-category topics (e.g. "python", "opencv" — anything not in TYPE_TAGS or STATUS_TAGS)
-  const getOtherTopics = (topics: string[]) =>
-    topics.filter((t) => !TYPE_TAGS.includes(t) && !STATUS_TAGS.includes(t));
+    topics.filter((t) => !STATUS_TAGS.includes(t));
 
   const clearAllFilters = () => {
     setSelectedLang(null);
@@ -228,7 +223,6 @@ export default function ProjectSearch({ repos }: Props) {
           {filtered.map((repo) => {
             const statusTag = getStatusTag(repo.topics);
             const typeTags = getTypeTags(repo.topics);
-            const otherTopics = getOtherTopics(repo.topics);
             const statusStyle = statusTag ? STATUS_STYLES[statusTag] : null;
 
             return (
@@ -303,22 +297,14 @@ export default function ProjectSearch({ repos }: Props) {
                 </div>
 
                 {/* Tags */}
-                {(typeTags.length > 0 || otherTopics.length > 0) && (
+                {typeTags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
-                    {typeTags.map((tag) => (
+                    {typeTags.slice(0, 4).map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 text-[10px] font-medium text-accent-400 bg-accent-500/10 rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {otherTopics.slice(0, 3).map((topic) => (
-                      <span
-                        key={topic}
                         className="px-2 py-0.5 text-[10px] font-medium text-primary-300 bg-primary-500/10 rounded-full"
                       >
-                        {topic}
+                        {tag}
                       </span>
                     ))}
                   </div>
