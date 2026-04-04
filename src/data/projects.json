@@ -17,5 +17,5 @@
       "customDescription": "LINE chatbot powered by Google Apps Script + Sheets with keyword fuzzy search for meme responses."
     }
   ],
-  "hidden": []
+  "hidden": ["allenphant.github.io"]
 }
