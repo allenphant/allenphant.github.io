@@ -203,6 +203,7 @@ export default function FrierenLiquidText() {
     let prepared: PreparedTextWithSegments[] | null = null
     let rafId = 0
     let scheduled = false
+    let canvasH = window.innerHeight  // updated in resizeCanvas; used for layout region
 
     let demons: Demon[] = []
     let beams: ZoltraakBeam[] = []
@@ -222,6 +223,7 @@ export default function FrierenLiquidText() {
       const w = window.innerWidth
       // Taller than viewport so all 4 paragraphs have room to render
       const h = Math.round(window.innerHeight * 1.4)
+      canvasH = h  // keep in sync for computeLayout
       canvas.width = w * dpr; canvas.height = h * dpr
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -364,7 +366,7 @@ export default function FrierenLiquidText() {
 
     function computeLayout(timestamp: number): PositionedLine[] {
       if (!prepared || prepared.length === 0) return []
-      const region: Rect = { x: GUTTER, y: GUTTER, width: window.innerWidth - GUTTER * 2, height: window.innerHeight - GUTTER * 2 }
+      const region: Rect = { x: GUTTER, y: GUTTER, width: window.innerWidth - GUTTER * 2, height: canvasH - GUTTER * 2 }
 
       const getBlocked = (bandTop: number, bandBottom: number): Interval[] => {
         const intervals: Interval[] = []
@@ -652,7 +654,7 @@ export default function FrierenLiquidText() {
       checkMimicTrap(timestamp)
 
       const lines = computeLayout(timestamp)
-      renderBackground(window.innerWidth, window.innerHeight)
+      renderBackground(window.innerWidth, canvasH)
       renderTextWithProximityColor(lines)
       // renderDemons(timestamp)  // Phase 5 — disabled
       renderBeams(timestamp)
