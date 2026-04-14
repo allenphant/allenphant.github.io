@@ -219,7 +219,9 @@ export default function FrierenLiquidText() {
     // ── Canvas resize ──
     function resizeCanvas() {
       const dpr = window.devicePixelRatio || 1
-      const w = window.innerWidth, h = window.innerHeight
+      const w = window.innerWidth
+      // Taller than viewport so all 4 paragraphs have room to render
+      const h = Math.round(window.innerHeight * 1.4)
       canvas.width = w * dpr; canvas.height = h * dpr
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)

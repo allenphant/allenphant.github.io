@@ -56,14 +56,9 @@ const experiences = [
     </div>
   </div>
 
-  {/* Full-viewport interactive bio canvas */}
-  <section style="position: relative; height: 100svh; overflow: hidden;">
+  {/* Interactive bio canvas — height auto-determined by canvas (1.4×vh) */}
+  <section style="position: relative;">
     <FrierenLiquidText client:only="react" />
-    <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); pointer-events: none; opacity: 0.4;">
-      <svg width="24" height="24" fill="none" stroke="#3B3B58" stroke-width="1.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-      </svg>
-    </div>
   </section>
 
   {/* Experience + Links (scroll down) */}
