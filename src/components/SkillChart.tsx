@@ -83,20 +83,20 @@ export default function SkillChart({ languages }: Props) {
         {top.map((lang) => (
           <div
             key={lang.name}
-            className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5"
+            className="flex items-center gap-3 p-3 rounded-xl bg-black/[0.03] border border-black/[0.06]"
           >
             <span
               className="w-3 h-3 rounded-full shrink-0"
               style={{ backgroundColor: lang.color }}
             />
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-medium text-gray-200 truncate">
+              <div className="text-sm font-medium text-[#2D2D2D] truncate">
                 {lang.name}
               </div>
-              <div className="text-xs text-gray-500">{lang.percentage}%</div>
+              <div className="text-xs text-[#9CA3AF]">{lang.percentage}%</div>
             </div>
             {/* Mini bar */}
-            <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
+            <div className="w-16 h-1.5 bg-black/[0.06] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all"
                 style={{

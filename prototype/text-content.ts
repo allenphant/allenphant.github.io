@@ -1,0 +1,10 @@
+// 每個字串是一個段落，main.ts 會自動加段落間距
+export const BIO_PARAGRAPHS: string[] = [
+  "I'm Allen (JuiChun Wang), holding both B.S. and M.S. degrees in Biochemical Science & Technology from National Taiwan University. My master's research focused on establishing and optimizing a multi-omics single-cell sequencing workflow (Drop-seq / SHARE-seq), using murine peritoneal immune cells as the study model. I was involved end-to-end — from sample preparation and NGS library construction to post-sequencing bioinformatics analysis. Wet-lab skills include mouse handling, cell culture, and molecular-biology-level sequencing prep; computational skills span Python, R, and Linux-based genome alignment pipelines.",
+
+  "Alongside research, I build software to eliminate repetitive work — a habit that started in the lab and grew into a broader portfolio. My lab automation tools have delivered measurable gains: a VBA macro that reduced flow cytometry NxN plot layouts from 1–3 days to under 10 minutes; a Python GUI that cut microscopy droplet-size analysis from 30–60 min per image to under 30 seconds; and web-based tools for automated gel image cropping and colony counting — all used in real research workflows.",
+
+  "The portfolio has since expanded well beyond single-use lab tools. On the full-stack side: SmartSchedule-OSS, a scheduling SaaS built with Next.js 15 and Supabase supporting dual-role management and Excel export; hexordle, a multiplayer Discord Wordle game with real-time WebSocket sync and PostgreSQL persistence; and PikminDexOCR, an Android companion app using on-device ML Kit OCR and Google Drive backup. On the AI side: a multi-backend LLM Discord bot for communication-style analysis, a local offline audio-to-SRT transcription tool, and an agent skill framework for automated knowledge accumulation.",
+
+  "I'm looking for a role where I can apply both my biology domain knowledge and software development skills — whether in bioinformatics, data engineering, or software engineering. I'm drawn to problems at the intersection of science and automation, and I work best when there's something genuinely worth building.",
+]

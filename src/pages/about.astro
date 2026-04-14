@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { fetchUserProfile } from "../lib/github";
+import FrierenLiquidText from "../components/FrierenLiquidText";
 
 let profile = null;
 
@@ -27,48 +28,48 @@ const experiences = [
 ---
 
 <BaseLayout title="About" description="Learn more about Allen — NTU Biochem M.S., lab automation, and Python scripting.">
+
+  {/* Profile header */}
+  <div class="section-container pt-8 pb-6">
+    <div class="max-w-2xl">
+      <div class="flex items-center gap-5">
+        <div class="w-20 h-20 rounded-full overflow-hidden ring-1 ring-[#D9D0C8] shrink-0">
+          <img
+            src={profile?.avatarUrl || "https://github.com/allenphant.png"}
+            alt="Profile"
+            class="w-full h-full object-cover"
+          />
+        </div>
+        <div>
+          <h1 class="text-3xl font-serif italic font-light text-[#2D2D2D] mb-1 tracking-wide">{profile?.name || "allenphant"}</h1>
+          {profile?.location && (
+            <p class="text-sm text-[#9CA3AF] font-light flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {profile.location}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Full-viewport interactive bio canvas */}
+  <section style="position: relative; height: 100svh; overflow: hidden;">
+    <FrierenLiquidText client:only="react" />
+    <div style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); pointer-events: none; opacity: 0.4;">
+      <svg width="24" height="24" fill="none" stroke="#3B3B58" stroke-width="1.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+      </svg>
+    </div>
+  </section>
+
+  {/* Experience + Links (scroll down) */}
   <section class="py-8 lg:py-10">
     <div class="section-container">
       <div class="max-w-2xl">
-
-        {/* Header */}
-        <div class="flex items-center gap-5 mb-12">
-          <div class="w-20 h-20 rounded-full overflow-hidden ring-1 ring-[#D9D0C8] shrink-0">
-            <img
-              src={profile?.avatarUrl || "https://github.com/allenphant.png"}
-              alt="Profile"
-              class="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h1 class="text-3xl font-serif italic font-light text-[#2D2D2D] mb-1 tracking-wide">{profile?.name || "allenphant"}</h1>
-            {profile?.location && (
-              <p class="text-sm text-[#9CA3AF] font-light flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                {profile.location}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Bio */}
-        <div class="card p-8 mb-12">
-          <h2 class="text-xs font-light uppercase tracking-widest text-[#9CA3AF] mb-5">About Me</h2>
-          <div class="text-[#5A5A5A] leading-relaxed space-y-4 font-light text-sm">
-            <p>
-              {profile?.bio || "M.S. in Biochemical Science & Technology from National Taiwan University (graduated Feb 2026)."}
-            </p>
-            <p>
-              With a background in molecular biology and bioinformatics tools,
-              I also love writing code to solve everyday problems — whether it's automating
-              tedious lab workflows, building chatbots, or scripting game tools.
-              I enjoy the process of identifying inefficiencies and building something to fix them.
-            </p>
-          </div>
-        </div>
 
         {/* Experience Timeline */}
         <div class="border-t border-[#D9D0C8] pt-12 mb-12">
