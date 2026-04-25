@@ -228,7 +228,10 @@ export default function FrierenLiquidText() {
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       // Mimic stays at viewport bottom-right, not canvas bottom (canvas is 1.4×vh)
-      mimicX = w - 90; mimicY = window.innerHeight - 90
+      // canvas.getBoundingClientRect().top is the canvas's distance from the viewport top,
+      // so we subtract it to convert viewport-bottom into canvas coordinates.
+      const canvasTop = canvas.getBoundingClientRect().top + window.scrollY
+      mimicX = w - 90; mimicY = window.innerHeight - canvasTop - 90
       fernTargetX = mimicX - 80; fernTargetY = mimicY
     }
 
