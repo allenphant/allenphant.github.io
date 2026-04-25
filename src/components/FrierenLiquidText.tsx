@@ -389,7 +389,7 @@ export default function FrierenLiquidText() {
 
         // Mimic — blocks once placed (position determined after first layout pass)
         if (mimicPlaced) {
-          const mi = getEllipseIntervalForBand(mimicX, mimicY, MIMIC_SIZE * 0.75, MIMIC_SIZE * 0.7, bandTop, bandBottom)
+          const mi = getEllipseIntervalForBand(mimicX, mimicY, MIMIC_SIZE * 0.6, MIMIC_SIZE * 0.6, bandTop, bandBottom)
           if (mi) intervals.push(mi)
         }
 
