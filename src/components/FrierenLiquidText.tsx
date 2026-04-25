@@ -227,7 +227,8 @@ export default function FrierenLiquidText() {
       canvas.width = w * dpr; canvas.height = h * dpr
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      mimicX = w - 90; mimicY = h - 90
+      // Mimic stays at viewport bottom-right, not canvas bottom (canvas is 1.4×vh)
+      mimicX = w - 90; mimicY = window.innerHeight - 90
       fernTargetX = mimicX - 80; fernTargetY = mimicY
     }
 
@@ -681,12 +682,20 @@ export default function FrierenLiquidText() {
 
     // ── Events ──
     const onMouseMove = (e: MouseEvent) => {
-      if (cursor.mouseX < -1000) { cursor.x = e.clientX; cursor.y = e.clientY }
-      if (!cursor.trapped) { cursor.mouseX = e.clientX; cursor.mouseY = e.clientY }
+      const rect = canvas.getBoundingClientRect()
+      const cx = e.clientX - rect.left
+      const cy = e.clientY - rect.top
+      if (cursor.mouseX < -1000) { cursor.x = cx; cursor.y = cy }
+      if (!cursor.trapped) { cursor.mouseX = cx; cursor.mouseY = cy }
       scheduleRender()
     }
     const onMouseDown = (e: MouseEvent) => {
-      if (e.button === 0) requestAnimationFrame((ts) => fireZoltraak(e.clientX, e.clientY, ts))
+      if (e.button === 0) {
+        const rect = canvas.getBoundingClientRect()
+        const cx = e.clientX - rect.left
+        const cy = e.clientY - rect.top
+        requestAnimationFrame((ts) => fireZoltraak(cx, cy, ts))
+      }
     }
     const onResize = () => { resizeCanvas(); scheduleRender() }
 
