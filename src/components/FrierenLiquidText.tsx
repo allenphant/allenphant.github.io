@@ -210,7 +210,8 @@ export default function FrierenLiquidText() {
     let demonIdCounter = 0
 
     let mimicState: MimicAnimState = 'closed'
-    let mimicX = 0, mimicY = 0
+    let mimicX = -9999, mimicY = -9999  // placed dynamically after first layout pass
+    let mimicPlaced = false
     let trapActive = false, chompStartTime = 0, trapCooldownEnd = 0
     let fernX = -200, fernY = 0
     let fernState: 'idle' | 'running' | 'pulling' = 'idle'
@@ -221,18 +222,15 @@ export default function FrierenLiquidText() {
     function resizeCanvas() {
       const dpr = window.devicePixelRatio || 1
       const w = window.innerWidth
-      // Taller than viewport so all 4 paragraphs have room to render
-      const h = Math.round(window.innerHeight * 1.4)
-      canvasH = h  // keep in sync for computeLayout
+      // Start tall; computeLayout will shrink canvas to fit actual text content
+      const h = Math.round(window.innerHeight * 1.6)
+      canvasH = h
       canvas.width = w * dpr; canvas.height = h * dpr
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      // Mimic stays at viewport bottom-right, not canvas bottom (canvas is 1.4×vh)
-      // canvas.getBoundingClientRect().top is the canvas's distance from the viewport top,
-      // so we subtract it to convert viewport-bottom into canvas coordinates.
-      const canvasTop = canvas.getBoundingClientRect().top + window.scrollY
-      mimicX = w - 90; mimicY = window.innerHeight - canvasTop - 90
-      fernTargetX = mimicX - 80; fernTargetY = mimicY
+      // Reset mimic so computeLayout re-places it at the real text bottom-right
+      mimicX = -9999; mimicY = -9999; mimicPlaced = false
+      fernTargetX = 0; fernTargetY = 0
     }
 
     // ── Hitmap ──
@@ -389,8 +387,8 @@ export default function FrierenLiquidText() {
           }
         }
 
-        // Mimic — always blocks (permanent fixture)
-        {
+        // Mimic — blocks once placed (position determined after first layout pass)
+        if (mimicPlaced) {
           const mi = getEllipseIntervalForBand(mimicX, mimicY, MIMIC_SIZE * 0.45, MIMIC_SIZE * 0.5, bandTop, bandBottom)
           if (mi) intervals.push(mi)
         }
@@ -436,6 +434,33 @@ export default function FrierenLiquidText() {
         allLines.push(...paraLines)
         currentY = paraLines[paraLines.length - 1].y + LINE_HEIGHT + PARA_GAP
       }
+
+      if (allLines.length > 0) {
+        const lastLine = allLines[allLines.length - 1]
+
+        // Pass 1: place mimic at the bottom-right corner of the text block
+        if (!mimicPlaced) {
+          mimicX = window.innerWidth - GUTTER - MIMIC_SIZE / 2
+          mimicY = lastLine.y  // mimic center aligns with last line; top half overlaps last few lines
+          fernTargetX = mimicX - 80; fernTargetY = mimicY
+          mimicPlaced = true
+          scheduleRender()  // trigger pass 2 which will apply mimic obstacle
+        }
+
+        // Auto-size canvas to fit text + mimic
+        const contentBottom = Math.max(
+          lastLine.y + LINE_HEIGHT,
+          mimicPlaced ? mimicY + MIMIC_SIZE / 2 : 0
+        ) + GUTTER
+        if (Math.abs(contentBottom - canvasH) > LINE_HEIGHT) {
+          canvasH = contentBottom
+          const dpr = window.devicePixelRatio || 1
+          canvas.height = contentBottom * dpr
+          canvas.style.height = `${contentBottom}px`
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        }
+      }
+
       return allLines
     }
 
