@@ -56,7 +56,9 @@ import ContactForm from "../components/ContactForm";
         </div>
 
         <p class="text-center text-xs text-[#9CA3AF] font-light mt-6">
-          Form powered by Formspree. Your data is handled securely.
+          {import.meta.env.PUBLIC_FORMSPREE_ID
+            ? "Form powered by Formspree. Your data is handled securely."
+            : "Sending opens your email app with the message prefilled."}
         </p>
       </div>
     </div>

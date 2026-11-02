@@ -40,6 +40,9 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           GH_USERNAME: allenphant
+          # Optional: set repo variable FORMSPREE_ID to enable Formspree;
+          # when empty the contact form falls back to mailto.
+          PUBLIC_FORMSPREE_ID: ${{ vars.FORMSPREE_ID }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

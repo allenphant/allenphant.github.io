@@ -1,17 +1,36 @@
 import { useState, type FormEvent } from "react";
 
+// Formspree form ID, injected at build time (PUBLIC_FORMSPREE_ID).
+// When it is not set, the form falls back to opening the visitor's
+// mail client with the message prefilled, so it never silently fails.
+const FORMSPREE_ID: string = import.meta.env.PUBLIC_FORMSPREE_ID ?? "";
+const CONTACT_EMAIL = "contact@allenphant.dev";
+
 export default function ContactForm() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "mailto" | "error">("idle");
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setStatus("sending");
 
     const form = e.currentTarget;
     const data = new FormData(form);
 
+    if (!FORMSPREE_ID) {
+      const name = String(data.get("name") ?? "");
+      const email = String(data.get("email") ?? "");
+      const subject = String(data.get("subject") ?? "");
+      const message = String(data.get("message") ?? "");
+      const body = `${message}\n\n— ${name} <${email}>`;
+      window.location.href =
+        `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      setStatus("mailto");
+      return;
+    }
+
+    setStatus("sending");
+
     try {
-      const res = await fetch("https://formspree.io/f/YOUR_FORM_ID", {
+      const res = await fetch(`https://formspree.io/f/${encodeURIComponent(FORMSPREE_ID)}`, {
         method: "POST",
         body: data,
         headers: { Accept: "application/json" },
@@ -28,19 +47,36 @@ export default function ContactForm() {
     }
   }
 
-  if (status === "sent") {
+  if (status === "sent" || status === "mailto") {
+    const isMailto = status === "mailto";
     return (
-      <div className="glass p-12 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center">
-          <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      <div className="py-8 text-center" role="status" aria-live="polite">
+        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[#E8DDD4] border border-[#D9D0C8] flex items-center justify-center">
+          <svg className="w-6 h-6 text-[#2D2D2D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">Message Sent!</h3>
-        <p className="text-gray-400">Thanks for reaching out. I'll get back to you soon.</p>
+        <h3 className="text-xl font-serif italic font-light text-[#2D2D2D] mb-2 tracking-wide">
+          {isMailto ? "Almost there" : "Message Sent!"}
+        </h3>
+        <p className="text-sm text-[#5A5A5A] font-light leading-relaxed">
+          {isMailto ? (
+            <>
+              Your email app should open with the message filled in — just hit send.
+              <br />
+              If nothing opened, write to{" "}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#2D2D2D] underline underline-offset-2">
+                {CONTACT_EMAIL}
+              </a>
+              .
+            </>
+          ) : (
+            "Thanks for reaching out. I'll get back to you soon."
+          )}
+        </p>
         <button
           onClick={() => setStatus("idle")}
-          className="mt-6 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+          className="mt-6 text-sm text-[#5A5A5A] hover:text-[#2D2D2D] underline underline-offset-2 transition-colors focus:outline-none focus:ring-2 focus:ring-[#2D2D2D] focus:ring-offset-2 rounded-[2px]"
         >
           Send another message
         </button>

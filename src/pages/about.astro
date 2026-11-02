@@ -2,6 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { fetchUserProfile } from "../lib/github";
 import FrierenLiquidText from "../components/FrierenLiquidText";
+import { BIO_PARAGRAPHS } from "../../prototype/text-content";
 
 let profile = null;
 
@@ -57,7 +58,13 @@ const experiences = [
   </div>
 
   {/* Interactive bio canvas — height auto-determined by canvas (1.4×vh) */}
-  <section style="position: relative;">
+  <section style="position: relative;" aria-labelledby="bio-heading">
+    {/* The canvas below is purely visual; this copy of the bio is what
+        screen readers and search engines read. */}
+    <div class="sr-only">
+      <h2 id="bio-heading">About me</h2>
+      {BIO_PARAGRAPHS.map((p) => <p>{p}</p>)}
+    </div>
     <FrierenLiquidText client:only="react" />
   </section>
 

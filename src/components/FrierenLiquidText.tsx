@@ -70,6 +70,7 @@ const GUTTER      = 60
 const CURSOR_SIZE = 128
 const FADE_PX     = 80
 const PARA_GAP    = Math.round(LINE_HEIGHT * 0.75)
+const LAYOUT_MAX_HEIGHT = 20000  // generous upper bound for text layout (px)
 
 const BEAM_DURATION    = 500
 const BEAM_TEXT_RADIUS = 40
@@ -368,7 +369,11 @@ export default function FrierenLiquidText() {
 
     function computeLayout(timestamp: number): PositionedLine[] {
       if (!prepared || prepared.length === 0) return []
-      const region: Rect = { x: GUTTER, y: GUTTER, width: window.innerWidth - GUTTER * 2, height: canvasH - GUTTER * 2 }
+      // The layout region must NOT be bounded by the current canvas height:
+      // on narrow screens the text needs more than the initial canvas height,
+      // and capping it here silently dropped the remaining paragraphs.
+      // Lay out all text first; the canvas is resized to fit below.
+      const region: Rect = { x: GUTTER, y: GUTTER, width: window.innerWidth - GUTTER * 2, height: LAYOUT_MAX_HEIGHT }
 
       const getBlocked = (bandTop: number, bandBottom: number): Interval[] => {
         const intervals: Interval[] = []
@@ -752,6 +757,7 @@ export default function FrierenLiquidText() {
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       style={{ display: 'block', width: '100%', height: '100%', cursor: 'none' }}
     />
   )
