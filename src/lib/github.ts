@@ -102,7 +102,7 @@ async function _fetchUserRepos(): Promise<GitHubRepo[]> {
   let cursor: string | null = null;
 
   while (hasNextPage) {
-    const { user } = await graphqlWithAuth<{ user: any }>(`
+    const { user }: { user: any } = await graphqlWithAuth<{ user: any }>(`
       query ($login: String!, $cursor: String) {
         user(login: $login) {
           repositories(
@@ -150,7 +150,7 @@ async function _fetchUserRepos(): Promise<GitHubRepo[]> {
       }
     `, { login: USERNAME, cursor });
 
-    const { nodes, pageInfo } = user.repositories;
+    const { nodes, pageInfo }: { nodes: any[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } } = user.repositories;
 
     for (const repo of nodes) {
       repos.push({

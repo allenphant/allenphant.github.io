@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react'
 import { prepareWithSegments, type PreparedTextWithSegments } from '@chenglou/pretext'
 import { layoutColumn, type Interval, type PositionedLine, type Rect } from '../../prototype/layout-engine'
 import { createCursor, updateCursor, type CursorState, type SpriteState } from '../../prototype/cursor'
-import { getCircleIntervalForBand, getEllipseIntervalForBand } from '../../prototype/obstacle'
+import { getEllipseIntervalForBand } from '../../prototype/obstacle'
 import { BIO_PARAGRAPHS } from '../../prototype/text-content'
 
 // ─── Sprite imports ───────────────────────────────────────────────────────────
@@ -72,14 +72,16 @@ const FADE_PX     = 80
 const PARA_GAP    = Math.round(LINE_HEIGHT * 0.75)
 const LAYOUT_MAX_HEIGHT = 20000  // generous upper bound for text layout (px)
 
+// Simulation constants are tuned per 60Hz frame; elapsed time is converted to
+// "60Hz steps" so motion is identical at 60/120/144Hz.
+const FRAME_MS        = 1000 / 60
+const MAX_FRAME_STEPS = 3      // clamp after stalls so nothing teleports
+
 const BEAM_DURATION    = 500
 const BEAM_TEXT_RADIUS = 40
-const DEMON_RADIUS     = 24
-const DEMON_DEATH_MS   = 600
-const DEMON_COUNT      = 4
 
 const MIMIC_HITBOX_R   = 70
-const FERN_SPEED       = 1.2
+const FERN_RUN_MS      = 2000  // Fern's walk to the mimic takes a fixed time, on any refresh rate
 const TRAP_COOLDOWN_MS = 3000
 const PULL_DURATION_MS = 1500
 
@@ -109,13 +111,9 @@ const BG_FLOWERS = Array.from({ length: 40 }, () => ({
 }))
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Demon = {
-  id: number; x: number; y: number; vx: number; vy: number
-  phase: number; state: 'floating' | 'dying' | 'dead'; deathStart: number
-}
 type ZoltraakBeam = {
   x1: number; y1: number; x2: number; y2: number
-  startTime: number; hitDemonId: number | null
+  startTime: number
 }
 type MimicAnimState = 'closed' | 'chomping' | 'chewing'
 type RowBounds = { left: number; right: number } | null
@@ -143,14 +141,8 @@ function lerpColor(from: string, to: string, t: number): string {
   return `rgb(${Math.round(f.r + (tt.r - f.r) * t)},${Math.round(f.g + (tt.g - f.g) * t)},${Math.round(f.b + (tt.b - f.b) * t)})`
 }
 
-function raycastHits(x1: number, y1: number, x2: number, y2: number, cx: number, cy: number, r: number): boolean {
-  const dx = x2 - x1, dy = y2 - y1, fx = x1 - cx, fy = y1 - cy
-  const a = dx * dx + dy * dy, b = 2 * (fx * dx + fy * dy), c = fx * fx + fy * fy - r * r
-  let disc = b * b - 4 * a * c
-  if (disc < 0) return false
-  disc = Math.sqrt(disc)
-  const t1 = (-b - disc) / (2 * a), t2 = (-b + disc) / (2 * a)
-  return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1)
+function spriteScale(state: SpriteState): [number, number] {
+  return state === 'dashing' ? [1.4, 0.8] : [1, 1]
 }
 
 function spriteColorForState(state: SpriteState): string {
@@ -168,9 +160,16 @@ export default function FrierenLiquidText() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const canvasEl = canvasRef.current
+    if (!canvasEl) return
+    // Non-null binding so nested closures don't need re-narrowing
+    const canvas: HTMLCanvasElement = canvasEl
     const ctx = canvas.getContext('2d')!
+
+    // ── Static layer (offscreen): background + laid-out text ──
+    const layer = document.createElement('canvas')
+    const lctx = layer.getContext('2d')!
+    let layerKey = ''
 
     // ── Hitmap canvas (offscreen) ──
     const hitmapCanvas = document.createElement('canvas')
@@ -206,9 +205,7 @@ export default function FrierenLiquidText() {
     let scheduled = false
     let canvasH = window.innerHeight  // updated in resizeCanvas; used for layout region
 
-    let demons: Demon[] = []
     let beams: ZoltraakBeam[] = []
-    let demonIdCounter = 0
 
     let mimicState: MimicAnimState = 'closed'
     let mimicX = -9999, mimicY = -9999  // placed dynamically after first layout pass
@@ -217,6 +214,7 @@ export default function FrierenLiquidText() {
     let fernX = -200, fernY = 0
     let fernState: 'idle' | 'running' | 'pulling' = 'idle'
     let fernPullStartTime = 0
+    let fernRunStartTime = 0, fernStartX = 0
     let fernTargetX = 0, fernTargetY = 0
 
     // ── Canvas resize ──
@@ -229,9 +227,12 @@ export default function FrierenLiquidText() {
       canvas.width = w * dpr; canvas.height = h * dpr
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      // Reset mimic so computeLayout re-places it at the real text bottom-right
+      // Reset mimic so computeLayout re-places it at the real text bottom-right,
+      // and cancel any trap in progress (its anchor point is about to move)
       mimicX = -9999; mimicY = -9999; mimicPlaced = false
       fernTargetX = 0; fernTargetY = 0
+      trapActive = false; cursor.trapped = false
+      mimicState = 'closed'; fernState = 'idle'; fernX = -200
     }
 
     // ── Hitmap ──
@@ -254,39 +255,19 @@ export default function FrierenLiquidText() {
       return { rows, size, img, facingLeft }
     }
 
-    function getSpriteInterval(cx: number, cy: number, hm: Hitmap, bandTop: number, bandBottom: number): Interval | null {
+    // sx/sy: the same scale renderCursor applies around the sprite centre
+    // (e.g. the dash stretch), so the text gap matches what is drawn.
+    function getSpriteInterval(cx: number, cy: number, hm: Hitmap, bandTop: number, bandBottom: number, sx = 1, sy = 1): Interval | null {
       const half = hm.size / 2
-      const rowStart = Math.max(0, Math.floor(bandTop  - (cy - half)))
-      const rowEnd   = Math.min(hm.size - 1, Math.ceil(bandBottom - (cy - half)))
+      const rowStart = Math.max(0, Math.floor((bandTop    - cy) / sy + half))
+      const rowEnd   = Math.min(hm.size - 1, Math.ceil((bandBottom - cy) / sy + half))
       if (rowStart > rowEnd) return null
       let minL = Infinity, maxR = -Infinity
       for (let r = rowStart; r <= rowEnd; r++) {
         const b = hm.rows[r]; if (b) { minL = Math.min(minL, b.left); maxR = Math.max(maxR, b.right) }
       }
       if (minL === Infinity) return null
-      return { left: cx - half + minL - 5, right: cx - half + maxR + 5 }
-    }
-
-    // ── Demons ──
-    function spawnDemons() {
-      demons = []
-      for (let i = 0; i < DEMON_COUNT; i++) {
-        const m = 60
-        const x = m + Math.random() * (window.innerWidth - m * 2)
-        const y = m + Math.random() * (window.innerHeight * 0.5)
-        const angle = Math.random() * Math.PI * 2
-        const spd = 0.4 + Math.random() * 0.6
-        demons.push({ id: demonIdCounter++, x, y, vx: Math.cos(angle) * spd, vy: Math.sin(angle) * spd, phase: Math.random() * Math.PI * 2, state: 'floating', deathStart: 0 })
-      }
-    }
-
-    function updateDemons() {
-      for (const d of demons) {
-        if (d.state !== 'floating') continue
-        d.phase += 0.03; d.x += d.vx; d.y += d.vy
-        if (d.x < DEMON_RADIUS || d.x > window.innerWidth  - DEMON_RADIUS) { d.vx *= -1; d.x = Math.max(DEMON_RADIUS, Math.min(window.innerWidth  - DEMON_RADIUS, d.x)) }
-        if (d.y < DEMON_RADIUS || d.y > window.innerHeight * 0.6)          { d.vy *= -1; d.y = Math.max(DEMON_RADIUS, Math.min(window.innerHeight * 0.6, d.y)) }
-      }
+      return { left: cx + (minL - half) * sx - 5, right: cx + (maxR - half) * sx + 5 }
     }
 
     // ── Beam helpers ──
@@ -312,16 +293,7 @@ export default function FrierenLiquidText() {
       const blen = Math.sqrt(bdx * bdx + bdy * bdy) || 1
       cursor.recoilVx = -(bdx / blen) * 12
       cursor.recoilVy = -(bdy / blen) * 12
-      const beam: ZoltraakBeam = { x1: beamOriginX, y1: beamOriginY, x2: endX, y2: endY, startTime: timestamp, hitDemonId: null }
-      const HIT_R = DEMON_RADIUS + 14
-      for (const d of demons) {
-        if (d.state !== 'floating') continue
-        const bob = Math.sin(d.phase) * 5
-        if (raycastHits(beam.x1, beam.y1, beam.x2, beam.y2, d.x, d.y + bob, HIT_R)) {
-          d.state = 'dying'; d.deathStart = timestamp; beam.hitDemonId = d.id; break
-        }
-      }
-      beams.push(beam)
+      beams.push({ x1: beamOriginX, y1: beamOriginY, x2: endX, y2: endY, startTime: timestamp })
       scheduleRender()
     }
 
@@ -333,7 +305,8 @@ export default function FrierenLiquidText() {
       if (dx * dx + dy * dy < MIMIC_HITBOX_R * MIMIC_HITBOX_R) {
         trapActive = true; chompStartTime = timestamp; cursor.trapped = true
         mimicState = 'chomping'
-        fernX = Math.max(0, mimicX - 600); fernY = mimicY; fernState = 'running'
+        fernStartX = Math.max(0, mimicX - 600); fernX = fernStartX; fernY = mimicY
+        fernRunStartTime = timestamp; fernState = 'running'
       }
     }
 
@@ -341,8 +314,10 @@ export default function FrierenLiquidText() {
       if (!trapActive) return
       if (mimicState === 'chomping' && timestamp - chompStartTime > 200) mimicState = 'chewing'
       if (fernState === 'running') {
-        fernX += FERN_SPEED
-        if (fernX >= fernTargetX) { fernX = fernTargetX; fernState = 'pulling'; fernPullStartTime = timestamp }
+        // Time-based walk: always FERN_RUN_MS, regardless of distance or refresh rate
+        const t = Math.min(1, (timestamp - fernRunStartTime) / FERN_RUN_MS)
+        fernX = fernStartX + (fernTargetX - fernStartX) * t
+        if (t >= 1) { fernX = fernTargetX; fernState = 'pulling'; fernPullStartTime = timestamp }
       }
       if (fernState === 'pulling' && timestamp - fernPullStartTime > PULL_DURATION_MS) {
         trapActive = false; cursor.trapped = false
@@ -384,7 +359,8 @@ export default function FrierenLiquidText() {
             if (!hitmap || hitmap.img !== currentSpriteFrame || hitmap.size !== currentSpriteDrawSize || hitmap.facingLeft !== cursor.facingLeft) {
               hitmap = buildHitmap(currentSpriteFrame, currentSpriteDrawSize, cursor.facingLeft)
             }
-            const si = getSpriteInterval(cursor.x, cursor.y, hitmap, bandTop, bandBottom)
+            const [sx, sy] = spriteScale(cursor.spriteState)
+            const si = getSpriteInterval(cursor.x, cursor.y, hitmap, bandTop, bandBottom, sx, sy)
             if (si) intervals.push(si)
           } else {
             const ci = getEllipseIntervalForBand(cursor.x, cursor.y, cursor.radius * 0.42, cursor.radius, bandTop, bandBottom)
@@ -407,14 +383,6 @@ export default function FrierenLiquidText() {
           if (bandBottom > mimicY - half && bandTop < mimicY + half) {
             intervals.push({ left: mimicX - 20 - half - 10, right: window.innerWidth + 100 })
           }
-        }
-
-        // Demons
-        for (const d of demons) {
-          if (d.state !== 'floating') continue
-          const bob = Math.sin(d.phase) * 5
-          const di = getCircleIntervalForBand(d.x, d.y + bob, DEMON_RADIUS + 10, bandTop, bandBottom)
-          if (di) intervals.push(di)
         }
 
         // Beams
@@ -469,75 +437,77 @@ export default function FrierenLiquidText() {
       return allLines
     }
 
+    // Text + background are drawn into an offscreen layer (lctx) and only
+    // redrawn when something that affects them changes; see render().
     // ── Text rendering ──
     function setJustifySpacing(line: PositionedLine) {
-      if (line.isLastLine) { ;(ctx as any).wordSpacing = '0px'; return }
+      if (line.isLastLine) { ;(lctx as any).wordSpacing = '0px'; return }
       const spaces = (line.text.match(/ /g) ?? []).length
       if (spaces > 0 && line.width / line.slotWidth > 0.55) {
-        ;(ctx as any).wordSpacing = `${(line.slotWidth - line.width) / spaces}px`
+        ;(lctx as any).wordSpacing = `${(line.slotWidth - line.width) / spaces}px`
       } else {
-        ;(ctx as any).wordSpacing = '0px'
+        ;(lctx as any).wordSpacing = '0px'
       }
     }
 
     function findSplitIndex(text: string, targetX: number, lineStartX: number): number {
       const rel = targetX - lineStartX
       if (rel <= 0) return 0
-      if (rel >= ctx.measureText(text).width) return text.length
+      if (rel >= lctx.measureText(text).width) return text.length
       let lo = 0, hi = text.length
       while (lo < hi) {
         const mid = (lo + hi) >> 1
-        if (ctx.measureText(text.slice(0, mid)).width < rel) { lo = mid + 1 } else { hi = mid }
+        if (lctx.measureText(text.slice(0, mid)).width < rel) { lo = mid + 1 } else { hi = mid }
       }
       return lo
     }
 
     function renderTextWithProximityColor(lines: PositionedLine[]) {
-      ctx.font = FONT; ctx.textBaseline = 'top'
+      lctx.font = FONT; lctx.textBaseline = 'top'
       const onScreen = cursor.x > -1000
       for (const line of lines) {
         setJustifySpacing(line)
-        if (!onScreen) { ctx.fillStyle = TEXT_COLOR; ctx.fillText(line.text, line.x, line.y); continue }
+        if (!onScreen) { lctx.fillStyle = TEXT_COLOR; lctx.fillText(line.text, line.x, line.y); continue }
         const dy = Math.abs(line.y + LINE_HEIGHT / 2 - cursor.y)
-        if (dy >= cursor.radius) { ctx.fillStyle = TEXT_COLOR; ctx.fillText(line.text, line.x, line.y); continue }
+        if (dy >= cursor.radius) { lctx.fillStyle = TEXT_COLOR; lctx.fillText(line.text, line.x, line.y); continue }
         const tint = 1 - dy / cursor.radius
         const lineMidX = line.x + line.width / 2
         if (lineMidX < cursor.x) {
           const fadeStart = line.x + line.width - FADE_PX * tint
           const si = findSplitIndex(line.text, fadeStart, line.x)
           const normal = line.text.slice(0, si), tinted = line.text.slice(si)
-          ctx.fillStyle = TEXT_COLOR; if (normal) ctx.fillText(normal, line.x, line.y)
-          if (tinted) { ctx.fillStyle = lerpColor(TEXT_COLOR, MAGIC_COLOR, tint); ctx.fillText(tinted, line.x + ctx.measureText(normal).width, line.y) }
+          lctx.fillStyle = TEXT_COLOR; if (normal) lctx.fillText(normal, line.x, line.y)
+          if (tinted) { lctx.fillStyle = lerpColor(TEXT_COLOR, MAGIC_COLOR, tint); lctx.fillText(tinted, line.x + lctx.measureText(normal).width, line.y) }
         } else {
           const fadeEnd = line.x + FADE_PX * tint
           const si = findSplitIndex(line.text, fadeEnd, line.x)
           const tinted = line.text.slice(0, si), normal = line.text.slice(si)
-          if (tinted) { ctx.fillStyle = lerpColor(TEXT_COLOR, MAGIC_COLOR, tint); ctx.fillText(tinted, line.x, line.y) }
-          if (normal) { ctx.fillStyle = TEXT_COLOR; ctx.fillText(normal, line.x + ctx.measureText(tinted).width, line.y) }
+          if (tinted) { lctx.fillStyle = lerpColor(TEXT_COLOR, MAGIC_COLOR, tint); lctx.fillText(tinted, line.x, line.y) }
+          if (normal) { lctx.fillStyle = TEXT_COLOR; lctx.fillText(normal, line.x + lctx.measureText(tinted).width, line.y) }
         }
       }
-      ;(ctx as any).wordSpacing = '0px'
+      ;(lctx as any).wordSpacing = '0px'
     }
 
     // ── Background ──
     function renderBackground(w: number, h: number) {
-      const grad = ctx.createLinearGradient(0, 0, 0, h)
+      const grad = lctx.createLinearGradient(0, 0, 0, h)
       grad.addColorStop(0,    '#F0EAE2')   // matches site bg-primary — seamless top edge
       grad.addColorStop(0.55, '#E8EAF2')   // soft mid-tone
       grad.addColorStop(1,    '#D8DCF0')   // muted lavender-blue at bottom
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, w, h)
+      lctx.fillStyle = grad; lctx.fillRect(0, 0, w, h)
 
       if (flowerImg.complete && flowerImg.naturalWidth > 0) {
-        ctx.save(); ctx.imageSmoothingEnabled = false
+        lctx.save(); lctx.imageSmoothingEnabled = false
         for (const s of BG_FLOWERS) {
-          ctx.save()
-          ctx.globalAlpha = s.a
-          ctx.translate(s.x * w, s.y * h)
-          ctx.rotate(s.rot)
-          ctx.drawImage(flowerImg, -s.size / 2, -s.size / 2, s.size, s.size)
-          ctx.restore()
+          lctx.save()
+          lctx.globalAlpha = s.a
+          lctx.translate(s.x * w, s.y * h)
+          lctx.rotate(s.rot)
+          lctx.drawImage(flowerImg, -s.size / 2, -s.size / 2, s.size, s.size)
+          lctx.restore()
         }
-        ctx.restore()
+        lctx.restore()
       }
     }
 
@@ -546,8 +516,7 @@ export default function FrierenLiquidText() {
       if (cursor.x < -1000 || cursor.trapped) return
       const floatOffset = Math.sin(timestamp / 300) * 4
       const cx = cursor.x, cy = cursor.y + floatOffset
-      const scaleX = cursor.spriteState === 'dashing' ? 1.4 : 1
-      const scaleY = cursor.spriteState === 'dashing' ? 0.8 : 1
+      const [scaleX, scaleY] = spriteScale(cursor.spriteState)
       const alpha  = cursor.spriteState === 'attacking' ? 0.7 + 0.3 * Math.sin(timestamp / 40) : 1
 
       ctx.save()
@@ -596,7 +565,6 @@ export default function FrierenLiquidText() {
 
     // ── Beam rendering ──
     function renderBeams(timestamp: number) {
-      beams = beams.filter(b => timestamp - b.startTime < BEAM_DURATION)
       for (const b of beams) {
         const t = (timestamp - b.startTime) / BEAM_DURATION
         const alpha = Math.max(0, 1 - t * t)
@@ -605,31 +573,6 @@ export default function FrierenLiquidText() {
         ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke()
         ctx.strokeStyle = '#DFFFFF'; ctx.lineWidth = 6 * (1 - t) + 1.5; ctx.shadowBlur = 10; ctx.shadowColor = '#fff'; ctx.globalAlpha = alpha
         ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo(b.x2, b.y2); ctx.stroke()
-        ctx.restore()
-      }
-    }
-
-    // ── Demon rendering ──
-    function renderDemons(timestamp: number) {
-      for (const d of demons) {
-        if (d.state === 'dead') continue
-        const bob = Math.sin(d.phase) * 5
-        const dx = d.x, dy = d.y + bob
-        if (d.state === 'dying') {
-          const t = Math.min(1, (timestamp - d.deathStart) / DEMON_DEATH_MS)
-          if (t >= 1) { d.state = 'dead'; continue }
-          ctx.save(); ctx.globalAlpha = 1 - t
-          ctx.strokeStyle = '#CC4444'; ctx.lineWidth = 2
-          ctx.beginPath(); ctx.arc(dx, dy, DEMON_RADIUS + 30 * t, 0, Math.PI * 2); ctx.stroke()
-          ctx.fillStyle = '#CC4444'; ctx.beginPath(); ctx.arc(dx, dy, DEMON_RADIUS * (1 - t * 0.8), 0, Math.PI * 2); ctx.fill()
-          ctx.restore(); continue
-        }
-        ctx.save()
-        ctx.fillStyle = '#4A3F6B'; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.arc(dx, dy, DEMON_RADIUS, 0, Math.PI * 2); ctx.fill()
-        ctx.fillStyle = '#CC4444'; ctx.globalAlpha = 0.9
-        ctx.beginPath(); ctx.arc(dx - 7, dy - 4, 4, 0, Math.PI * 2); ctx.arc(dx + 7, dy - 4, 4, 0, Math.PI * 2); ctx.fill()
-        ctx.fillStyle = '#ddd'; ctx.globalAlpha = 0.7; ctx.font = '9px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-        ctx.fillText('魔族', dx, dy + 10)
         ctx.restore()
       }
     }
@@ -680,17 +623,84 @@ export default function FrierenLiquidText() {
     }
 
     // ── Main render loop ──
-    function render(timestamp: number) {
-      scheduled = false
-      updateCursor(cursor)
-      // updateDemons()  // Phase 5 — disabled
-      updateTrap(timestamp)
-      checkMimicTrap(timestamp)
+    let lastTs = 0
+    let inView = true          // canvas intersects the viewport (IntersectionObserver)
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let reducedMotion = motionQuery.matches
 
-      const lines = computeLayout(timestamp)
+    // Everything that changes the static layer (layout + text tint + background).
+    // Returns null when it must be redrawn every frame (beams / Fern moving).
+    function staticLayerKey(): string | null {
+      if (beams.length > 0 || fernState === 'running') return null
+      return [
+        canvas.width, canvasH, prepared ? 1 : 0, flowerImg.complete ? 1 : 0,
+        cursor.x, cursor.y, cursor.trapped ? 1 : 0, cursor.facingLeft ? 1 : 0, cursor.spriteState,
+        currentSpriteFrame?.src ?? '', currentSpriteDrawSize,
+        mimicPlaced ? 1 : 0, mimicX, mimicY, fernState,
+      ].join('|')
+    }
+
+    // Bounding boxes (CSS px) of everything drawn on top of the static layer
+    // while settled: Frieren (incl. bob, dash stretch, trap shake), reticle, mimic.
+    type DirtyRect = { x: number; y: number; w: number; h: number }
+    let prevSpriteRects: DirtyRect[] | null = null
+    function currentSpriteRects(timestamp: number): DirtyRect[] {
+      const rects: DirtyRect[] = []
+      const box = (cx: number, cy: number, half: number) => rects.push({ x: cx - half, y: cy - half, w: half * 2, h: half * 2 })
+      if (cursor.x > -1000) box(cursor.x, cursor.y + Math.sin(timestamp / 300) * 4, CURSOR_SIZE * 1.2 * 1.4 / 2 + 8)
+      if (cursor.mouseX > -1000) box(cursor.mouseX, cursor.mouseY, 12)
+      if (mimicPlaced) box(mimicX, mimicY, MIMIC_SIZE / 2 + 4)
+      return rects
+    }
+
+    function redrawStaticLayer(timestamp: number) {
+      const lines = computeLayout(timestamp)   // may resize the main canvas
+      if (layer.width !== canvas.width || layer.height !== canvas.height) {
+        layer.width = canvas.width; layer.height = canvas.height
+      }
+      const dpr = window.devicePixelRatio || 1
+      lctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       renderBackground(window.innerWidth, canvasH)
       renderTextWithProximityColor(lines)
-      // renderDemons(timestamp)  // Phase 5 — disabled
+    }
+
+    function render(timestamp: number) {
+      scheduled = false
+      const steps = lastTs ? Math.min(MAX_FRAME_STEPS, Math.max(0.01, (timestamp - lastTs) / FRAME_MS)) : 1
+      lastTs = timestamp
+      updateCursor(cursor, steps)
+      updateTrap(timestamp)
+      checkMimicTrap(timestamp)
+      beams = beams.filter(b => timestamp - b.startTime < BEAM_DURATION)
+
+      const key = staticLayerKey()
+      const layerChanged = key === null || key !== layerKey
+      if (layerChanged) {
+        redrawStaticLayer(timestamp)
+        // Remember the inputs this layout was computed FROM. If computeLayout
+        // changed them (first pass places the mimic, or the canvas was
+        // resized), the key now differs and the next frame lays out again,
+        // which is what makes the text wrap around the mimic.
+        layerKey = key ?? ''
+      }
+
+      // Restore the static layer. When only the idle sprites move (the common
+      // "settled" case), repaint just the areas they covered last frame and
+      // cover now, instead of the whole canvas.
+      const spriteRects = currentSpriteRects(timestamp)
+      const partial = !layerChanged && prevSpriteRects !== null && beams.length === 0 &&
+        !trapActive && fernState === 'idle' && mimicState === 'closed'
+      ctx.save()
+      if (partial) {
+        ctx.beginPath()
+        for (const r of [...prevSpriteRects!, ...spriteRects]) ctx.rect(r.x, r.y, r.w, r.h)
+        ctx.clip()
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.drawImage(layer, 0, 0)
+      ctx.restore()
+      prevSpriteRects = spriteRects
+
       renderBeams(timestamp)
       renderMimic(timestamp)
       renderFern(timestamp)
@@ -699,58 +709,110 @@ export default function FrierenLiquidText() {
 
       const cursorOnScreen = cursor.x > -1000
       const hasMovement  = Math.abs(cursor.mouseX - cursor.x) > 0.5 || Math.abs(cursor.mouseY - cursor.y) > 0.5
-      const hasBeams     = beams.some(b => timestamp - b.startTime < BEAM_DURATION)
-      const hasDying     = demons.some(d => d.state === 'dying')
+      const busy = cursorOnScreen || hasMovement || beams.length > 0 || trapActive || fernState === 'running' || mimicState !== 'closed'
 
-      if (cursorOnScreen || hasMovement || hasBeams || hasDying || trapActive || fernState === 'running' || mimicState !== 'closed') {
+      if (busy && inView && !reducedMotion) {
         scheduleRender()
+      } else {
+        lastTs = 0   // loop paused: next start must not count the idle gap
       }
     }
 
     function scheduleRender() {
-      if (scheduled) return
+      // Off-screen: don't render at all; the observer restarts the loop
+      if (scheduled || !inView) return
       scheduled = true
       rafId = requestAnimationFrame(render)
     }
 
     // ── Events ──
-    const onMouseMove = (e: MouseEvent) => {
+    let lastClientX: number | null = null, lastClientY = 0
+
+    function pointerToCanvas(clientX: number, clientY: number): [number, number] {
       const rect = canvas.getBoundingClientRect()
-      const cx = e.clientX - rect.left
-      const cy = e.clientY - rect.top
+      return [clientX - rect.left, clientY - rect.top]
+    }
+    function setTarget(cx: number, cy: number) {
       if (cursor.mouseX < -1000) { cursor.x = cx; cursor.y = cy }
       if (!cursor.trapped) { cursor.mouseX = cx; cursor.mouseY = cy }
       scheduleRender()
     }
-    const onMouseDown = (e: MouseEvent) => {
-      if (e.button === 0) {
-        const rect = canvas.getBoundingClientRect()
-        const cx = e.clientX - rect.left
-        const cy = e.clientY - rect.top
-        requestAnimationFrame((ts) => fireZoltraak(cx, cy, ts))
-      }
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (reducedMotion) return
+      lastClientX = e.clientX; lastClientY = e.clientY
+      setTarget(...pointerToCanvas(e.clientX, e.clientY))
     }
-    const onResize = () => { resizeCanvas(); scheduleRender() }
+    // Scrolling moves the canvas under a stationary pointer; re-derive the
+    // canvas-space target so the reticle stays under the real pointer.
+    const onScroll = () => {
+      if (reducedMotion || lastClientX === null) return
+      setTarget(...pointerToCanvas(lastClientX, lastClientY))
+    }
+    // Only clicks on the canvas itself fire — not nav links, buttons, etc.
+    const onMouseDown = (e: MouseEvent) => {
+      if (reducedMotion || e.button !== 0 || e.target !== canvas) return
+      const [cx, cy] = pointerToCanvas(e.clientX, e.clientY)
+      requestAnimationFrame((ts) => fireZoltraak(cx, cy, ts))
+    }
+    // Mobile browsers fire resize when the URL bar shows/hides while
+    // scrolling; layout only depends on width, so ignore height-only changes.
+    let lastWidth = window.innerWidth
+    const onResize = () => {
+      if (window.innerWidth === lastWidth) return
+      lastWidth = window.innerWidth
+      resizeCanvas(); layerKey = ''; prevSpriteRects = null; scheduleRender()
+    }
+
+    function applyMotionPreference() {
+      reducedMotion = motionQuery.matches
+      if (reducedMotion) {
+        // Static page: text, background and closed mimic only; normal pointer
+        canvas.style.cursor = 'auto'
+        cursor.x = cursor.y = cursor.mouseX = cursor.mouseY = -9999
+        cursor.recoilVx = cursor.recoilVy = 0; cursor.attackTimer = 0
+        cursor.trapped = false; trapActive = false
+        beams = []; mimicState = 'closed'; fernState = 'idle'; fernX = -200
+        lastClientX = null
+      } else {
+        canvas.style.cursor = 'none'
+      }
+      layerKey = ''
+      scheduleRender()
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      inView = entries.some(e => e.isIntersecting)
+      if (inView) scheduleRender()
+    })
+    observer.observe(canvas)
 
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
+    motionQuery.addEventListener('change', applyMotionPreference)
 
     // ── Init ──
+    let disposed = false
     async function init() {
       resizeCanvas()
       await document.fonts.ready
+      if (disposed) return
       prepared = BIO_PARAGRAPHS.map(p => prepareWithSegments(p, FONT))
-      // spawnDemons()  // Phase 5 — disabled
-      scheduleRender()
+      applyMotionPreference()
     }
     init()
 
     return () => {
+      disposed = true
       cancelAnimationFrame(rafId)
+      observer.disconnect()
       window.removeEventListener('mousemove', onMouseMove)
       window.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
+      motionQuery.removeEventListener('change', applyMotionPreference)
     }
   }, [])
 
