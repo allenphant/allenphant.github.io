@@ -88,17 +88,29 @@ const PULL_DURATION_MS = 1500
 const MIMIC_SIZE      = 128
 const MIMIC_CHOMP_FPS = 8
 const MIMIC_CHEW_FPS  = 4
-const FERN_SIZE       = 144
-const FERN_PULL_SIZE  = 180
+const FERN_SIZE       = 128   // 2x the 64px sprite
+const FERN_PULL_SIZE  = 192   // 3x
 const FERN_WALK_FPS   = 6
 const FERN_PULL_FPS   = 3
 const SPRITE_FPS      = 2
 const ATTACKING_FPS   = 4
-const STAFF_TIP_X     = 52
-const STAFF_TIP_Y     = -15
+// Staff tip (beam origin) relative to Frieren's centre, as a fraction of her draw size
+const STAFF_TIP_X     = 0.37
+const STAFF_TIP_Y     = -0.107
 
-const SPRITE_DISPLAY_SCALE: Partial<Record<SpriteState, number>> = {
-  idle: 1.1, gliding: 1.2, dashing: 1.0, attacking: 1.1,
+// Sprites are 64x64 pixel art. Draw them at a whole number of *device* pixels
+// per sprite pixel and at device-pixel-aligned positions, so every sprite pixel
+// is the same size on screen (no uneven 2px/3px columns, no shimmer while moving),
+// including on fractional-scaling displays (125%, 150%, ...).
+const SPRITE_PX = 64
+function crispSize(cssSize: number): number {
+  const dpr = window.devicePixelRatio || 1
+  const k = Math.max(1, Math.round((cssSize / SPRITE_PX) * dpr))
+  return (k * SPRITE_PX) / dpr
+}
+function snapPx(v: number): number {
+  const dpr = window.devicePixelRatio || 1
+  return Math.round(v * dpr) / dpr
 }
 
 // ─── Background flower positions (generated once at module load) ──────────────
@@ -287,8 +299,9 @@ export default function FrierenLiquidText() {
       if (cursor.x < -1000 || cursor.trapped) return
       cursor.attackTimer = 30
       const staffSign = cursor.facingLeft ? -1 : 1
-      const beamOriginX = cursor.x + staffSign * STAFF_TIP_X
-      const beamOriginY = cursor.y + STAFF_TIP_Y
+      const size = crispSize(CURSOR_SIZE)
+      const beamOriginX = cursor.x + staffSign * STAFF_TIP_X * size
+      const beamOriginY = cursor.y + STAFF_TIP_Y * size
       const [endX, endY] = resolveBeamEndpoint(toX, toY)
       const bdx = endX - cursor.x, bdy = endY - cursor.y
       const blen = Math.sqrt(bdx * bdx + bdy * bdy) || 1
@@ -521,11 +534,11 @@ export default function FrierenLiquidText() {
       const alpha  = cursor.spriteState === 'attacking' ? 0.7 + 0.3 * Math.sin(timestamp / 40) : 1
 
       ctx.save()
-      ctx.translate(cx, cy)
+      const shake = cursor.spriteState === 'trapped' ? Math.sin(timestamp / 60) * 3 : 0
+      ctx.translate(snapPx(cx + shake), snapPx(cy))
       if (cursor.facingLeft) ctx.scale(-1, 1)
       ctx.scale(scaleX, scaleY)
       ctx.globalAlpha = alpha
-      if (cursor.spriteState === 'trapped') ctx.translate(Math.sin(timestamp / 60) * 3, 0)
 
       const spriteMap: Partial<Record<SpriteState, { frames: HTMLImageElement[], loaded: boolean, fps?: number }>> = {
         idle:      { frames: idleFrames,      loaded: idleLoaded },
@@ -537,8 +550,7 @@ export default function FrierenLiquidText() {
       if (entry?.loaded) {
         const fps = entry.fps ?? SPRITE_FPS
         const frameIdx = Math.floor(timestamp / (1000 / fps)) % entry.frames.length
-        const scale = SPRITE_DISPLAY_SCALE[cursor.spriteState] ?? 1.0
-        const drawSize = CURSOR_SIZE * scale
+        const drawSize = crispSize(CURSOR_SIZE)
         currentSpriteFrame    = entry.frames[frameIdx]
         currentSpriteDrawSize = Math.round(drawSize)
         ctx.imageSmoothingEnabled = false
@@ -581,16 +593,17 @@ export default function FrierenLiquidText() {
     // ── Mimic rendering ──
     function renderMimic(timestamp: number) {
       if (fernState === 'pulling') return
-      ctx.save(); ctx.translate(mimicX, mimicY); ctx.scale(-1, 1); ctx.imageSmoothingEnabled = false
-      const half = MIMIC_SIZE / 2
+      ctx.save(); ctx.translate(snapPx(mimicX), snapPx(mimicY)); ctx.scale(-1, 1); ctx.imageSmoothingEnabled = false
+      const size = crispSize(MIMIC_SIZE)
+      const half = size / 2
       if (mimicState === 'closed' && mimicClosedLoaded) {
-        ctx.drawImage(mimicClosedFrames[0], -half, -half, MIMIC_SIZE, MIMIC_SIZE)
+        ctx.drawImage(mimicClosedFrames[0], -half, -half, size, size)
       } else if (mimicState === 'chomping' && mimicChompingLoaded) {
         const fi = Math.floor(timestamp / (1000 / MIMIC_CHOMP_FPS)) % mimicChompingFrames.length
-        ctx.drawImage(mimicChompingFrames[fi], -half, -half, MIMIC_SIZE, MIMIC_SIZE)
+        ctx.drawImage(mimicChompingFrames[fi], -half, -half, size, size)
       } else if (mimicState === 'chewing' && mimicChewingLoaded) {
         const fi = Math.floor(timestamp / (1000 / MIMIC_CHEW_FPS)) % mimicChewingFrames.length
-        ctx.drawImage(mimicChewingFrames[fi], -half, -half, MIMIC_SIZE, MIMIC_SIZE)
+        ctx.drawImage(mimicChewingFrames[fi], -half, -half, size, size)
       } else {
         ctx.fillStyle = mimicState === 'closed' ? GOLD_COLOR : '#8B2020'
         ctx.fillRect(-30, -25, 60, 50)
@@ -604,11 +617,11 @@ export default function FrierenLiquidText() {
     function renderFern(timestamp: number) {
       if (fernState === 'idle') return
       const isPulling = fernState === 'pulling'
-      const drawSize  = isPulling ? FERN_PULL_SIZE : FERN_SIZE
+      const drawSize  = crispSize(isPulling ? FERN_PULL_SIZE : FERN_SIZE)
       const half      = drawSize / 2
       const anchorX   = isPulling ? mimicX - 20 : fernX
       const anchorY   = isPulling ? mimicY : fernY
-      ctx.save(); ctx.translate(anchorX, anchorY); ctx.imageSmoothingEnabled = false
+      ctx.save(); ctx.translate(snapPx(anchorX), snapPx(anchorY)); ctx.imageSmoothingEnabled = false
       if (fernState === 'running' && fernWalkLoaded) {
         const fi = Math.floor(timestamp / (1000 / FERN_WALK_FPS)) % fernWalkFrames.length
         ctx.drawImage(fernWalkFrames[fi], -half, -half, drawSize, drawSize)
@@ -648,9 +661,9 @@ export default function FrierenLiquidText() {
     function currentSpriteRects(timestamp: number): DirtyRect[] {
       const rects: DirtyRect[] = []
       const box = (cx: number, cy: number, half: number) => rects.push({ x: cx - half, y: cy - half, w: half * 2, h: half * 2 })
-      if (cursor.x > -1000) box(cursor.x, cursor.y + Math.sin(timestamp / 300) * 4, CURSOR_SIZE * 1.2 * 1.4 / 2 + 8)
+      if (cursor.x > -1000) box(cursor.x, cursor.y + Math.sin(timestamp / 300) * 4, crispSize(CURSOR_SIZE) * 1.4 / 2 + 8)
       if (cursor.mouseX > -1000) box(cursor.mouseX, cursor.mouseY, 12)
-      if (mimicPlaced) box(mimicX, mimicY, MIMIC_SIZE / 2 + 4)
+      if (mimicPlaced) box(mimicX, mimicY, crispSize(MIMIC_SIZE) / 2 + 4)
       return rects
     }
 

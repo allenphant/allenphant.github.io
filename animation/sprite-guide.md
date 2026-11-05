@@ -7,10 +7,20 @@
 | 每格尺寸 | **64×64 px** per frame（所有角色統一） |
 | 背景 | 純綠色 `#00FF00` 綠幕 |
 | Sheet 格式 | **2×2 格**（4 幀）或 **1×2 格**（2 幀），直接給 process_sprite.py 處理 |
-| 處理工具 | `python process_sprite.py <input.png> 64 <prefix>` |
-| 輸出 | SVG only（去背 + 縮放），preview PNG 供選幀後刪除 |
-| Canvas 渲染 | `ctx.imageSmoothingEnabled = false`，個別 SVG 載入，按幀序 drawImage |
+| 處理工具 | `python process_sprite.py <input.png> 64 <prefix>`（去背、裁切、選幀），再跑 `python3 animation/repixel_sprites.py` |
+| 輸出 | 網站使用的是 `animation/<sprite>.png`（64×64、每個角色共用約 32 色的色盤、無半透明）；SVG 與 preview PNG 只是中間產物 |
+| Canvas 渲染 | `ctx.imageSmoothingEnabled = false`；以 64px 的整數倍、對齊裝置像素繪製（見 `FrierenLiquidText.tsx` 的 `crispSize` / `snapPx`） |
 | 風格 | Chibi 像素風，符合《葬送的芙莉蓮》角色造型 |
+
+---
+
+## 為什麼要第二步（repixel_sprites.py）
+
+AI 生成的是「像素風圖片」，不是真正的像素圖：每格約 1,000 種顏色、邊緣半透明，而且 AI 畫的像素格（約 5px）
+和 64 格輸出對不齊，最近鄰縮放會隨機跳過或重複原圖像素，造成外框斷裂。`repixel_sprites.py` 用同樣的裁切，
+但改成「每個輸出像素取對應原圖區塊的主要顏色」、每個角色共用色盤、透明度只有全有或全無。
+新增角色或幀時，在 `repixel_sprites.py` 的 `CHARS` 加上來源圖、格線模式與幀名稱；
+眼睛之類只有 1–2px 的小細節若被吃掉，用 `pins` 指定該顏色。
 
 ---
 

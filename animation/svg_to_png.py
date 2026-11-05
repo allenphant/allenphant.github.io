@@ -30,7 +30,8 @@ def parse_color(value: str) -> tuple[int, int, int]:
     raise ValueError(f"unsupported fill colour: {value!r}")
 
 
-def convert(svg_path: Path) -> Path:
+def rasterize(svg_path: Path) -> Image.Image:
+    """Rasterize a pixel-art SVG to an RGBA image (in memory)."""
     text = svg_path.read_text()
     vb = VIEWBOX.search(text)
     if not vb:
@@ -47,9 +48,12 @@ def convert(svg_path: Path) -> Path:
         # Paint in document order with source-over compositing, like a browser.
         layer = Image.new("RGBA", (w, h), (r, g, b, round(alpha * 255)))
         img.alpha_composite(layer, (x, y))
+    return img
 
+
+def convert(svg_path: Path) -> Path:
     out = svg_path.with_suffix(".png")
-    img.save(out, optimize=True)
+    rasterize(svg_path).save(out, optimize=True)
     return out
 
 
