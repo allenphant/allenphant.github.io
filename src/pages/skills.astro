@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SkillChart from "../components/SkillChart";
-import { fetchUserRepos, computeLanguageStats } from "../lib/github";
+import { fetchUserRepos, computeLanguageStats, handleGitHubError } from "../lib/github";
 import type { ProjectsConfig } from "../lib/types";
 import projectsConfig from "../data/projects.json";
 
@@ -18,7 +18,7 @@ try {
   repoCount = visibleRepos.length;
   languageStats = computeLanguageStats(visibleRepos);
 } catch (e) {
-  console.error("Failed to fetch skills data:", e);
+  handleGitHubError("fetch repos (skills page)", e);
 }
 
 const skillCategories = [

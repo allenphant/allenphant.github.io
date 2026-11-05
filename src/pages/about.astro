@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { fetchUserProfile } from "../lib/github";
+import { fetchUserProfile, handleGitHubError } from "../lib/github";
 import FrierenLiquidText from "../components/FrierenLiquidText";
 import { BIO_PARAGRAPHS } from "../../prototype/text-content";
 
@@ -9,7 +9,7 @@ let profile = null;
 try {
   profile = await fetchUserProfile();
 } catch (e) {
-  console.error("Failed to fetch profile:", e);
+  handleGitHubError("fetch profile (about page)", e);
 }
 
 const experiences = [

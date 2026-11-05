@@ -2,7 +2,7 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import ProjectCard from "../components/ProjectCard.astro";
-import { fetchUserProfile, fetchUserRepos, computeLanguageStats } from "../lib/github";
+import { fetchUserProfile, fetchUserRepos, computeLanguageStats, handleGitHubError } from "../lib/github";
 import type { ProjectsConfig } from "../lib/types";
 import projectsConfig from "../data/projects.json";
 
@@ -37,7 +37,7 @@ try {
 
   topLanguages = computeLanguageStats(visibleRepos).slice(0, 8);
 } catch (e) {
-  console.error("Failed to fetch GitHub data:", e);
+  handleGitHubError("fetch profile/repos (home page)", e);
 }
 ---
 

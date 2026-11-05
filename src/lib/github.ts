@@ -4,13 +4,46 @@ import type { GitHubRepo, LanguageStats, UserProfile } from "./types";
 const USERNAME = import.meta.env.GH_USERNAME || "allenphant";
 const TOKEN = import.meta.env.GH_PAT;
 
+const HAS_TOKEN = Boolean(TOKEN && TOKEN !== "your_github_pat_here");
+
 const graphqlWithAuth = graphql.defaults({
   headers: {
-    ...(TOKEN && TOKEN !== "your_github_pat_here"
-      ? { authorization: `token ${TOKEN}` }
-      : {}),
+    ...(HAS_TOKEN ? { authorization: `token ${TOKEN}` } : {}),
   },
 });
+
+// Strict mode: in CI (GitHub Actions sets CI=true) or when GH_STRICT is set,
+// a failed GitHub fetch must fail the build instead of silently deploying
+// pages that show "Add your GH_PAT" placeholders.
+const processEnv: Record<string, string | undefined> =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+const isSet = (v: unknown) => v !== undefined && v !== "" && v !== "false" && v !== "0";
+export const STRICT_GITHUB_FETCH =
+  isSet(import.meta.env.CI) || isSet(processEnv.CI) ||
+  isSet(import.meta.env.GH_STRICT) || isSet(processEnv.GH_STRICT);
+
+/**
+ * Call from a page's catch block. Throws (failing the build) in strict mode;
+ * otherwise logs a warning so local builds without a token still work.
+ */
+export function handleGitHubError(context: string, e: unknown): void {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (STRICT_GITHUB_FETCH) {
+    throw new Error(
+      `[github] ${context}: ${msg}\n` +
+        "Refusing to build the site without GitHub data. Check the GH_PAT secret " +
+        "(expired/revoked?) or unset CI/GH_STRICT for a local placeholder build.",
+      { cause: e },
+    );
+  }
+  console.warn(`[github] ${context} — building with placeholder content: ${msg}`);
+}
+
+function assertTokenInStrictMode(): void {
+  if (STRICT_GITHUB_FETCH && !HAS_TOKEN) {
+    throw new Error("GH_PAT is not set");
+  }
+}
 
 // In-memory cache: survives the entire build process so each API
 // call is made at most once across all pages.
@@ -32,6 +65,7 @@ export function fetchUserRepos(): Promise<GitHubRepo[]> {
 }
 
 async function _fetchUserProfile(): Promise<UserProfile> {
+  assertTokenInStrictMode();
   const { user } = await graphqlWithAuth<{ user: any }>(`
     query ($login: String!) {
       user(login: $login) {
@@ -62,6 +96,7 @@ async function _fetchUserProfile(): Promise<UserProfile> {
 }
 
 async function _fetchUserRepos(): Promise<GitHubRepo[]> {
+  assertTokenInStrictMode();
   const repos: GitHubRepo[] = [];
   let hasNextPage = true;
   let cursor: string | null = null;

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import ProjectSearch from "../components/ProjectSearch";
-import { fetchUserRepos } from "../lib/github";
+import { fetchUserRepos, handleGitHubError } from "../lib/github";
 import type { ProjectsConfig } from "../lib/types";
 import projectsConfig from "../data/projects.json";
 
@@ -15,7 +15,7 @@ try {
     (r) => !r.isArchived && !r.isFork && !config.hidden.includes(r.name)
   );
 } catch (e) {
-  console.error("Failed to fetch repos:", e);
+  handleGitHubError("fetch repos (projects page)", e);
 }
 ---
 
