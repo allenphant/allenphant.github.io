@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400&family=JetBrains+Mono:wght@400&display=block" rel="stylesheet">
+<style>
+@font-face { font-family: "Noto Sans JP"; font-weight: 300 500; src: url(../../public/fonts/noto-sans-jp-latin.woff2) format("woff2"); }
+* { margin: 0; box-sizing: border-box; }
+html, body { width: 1200px; height: 630px; overflow: hidden; }
+body {
+  position: relative;
+  background: linear-gradient(180deg, #F0EAE2 0%, #E8EAF2 62%, #D8DCF0 100%);
+  font-family: "Noto Sans JP", sans-serif; color: #2D2D2D;
+}
+.flower { position: absolute; image-rendering: pixelated; }
+.frame { position: absolute; inset: 28px; border: 1px solid rgba(45,45,45,.12); border-radius: 6px; }
+.content { position: absolute; left: 96px; top: 112px; width: 640px; }
+.eyebrow { font-family: "JetBrains Mono", monospace; font-size: 20px; letter-spacing: .08em; color: #81642D; margin-bottom: 26px; }
+h1 { font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 300; font-size: 124px; line-height: .95; letter-spacing: -.01em; }
+.rule { width: 64px; height: 2px; background: #C5A059; margin: 34px 0 30px; }
+.who { font-size: 27px; font-weight: 400; color: #2D2D2D; margin-bottom: 14px; }
+.what { font-size: 25px; font-weight: 300; color: #5A5A5A; line-height: 1.5; }
+.url { position: absolute; left: 96px; bottom: 76px; font-family: "JetBrains Mono", monospace; font-size: 20px; color: #626A79; letter-spacing: .02em; }
+.stage { position: absolute; right: 70px; bottom: 58px; width: 360px; height: 430px; }
+.frieren { position: absolute; left: 10px; top: 0; width: 320px; height: 320px; image-rendering: pixelated; }
+.mimic { position: absolute; right: -6px; bottom: 0; width: 128px; height: 128px; image-rendering: pixelated; transform: scaleX(-1); }
+.shadow { position: absolute; left: 70px; top: 318px; width: 200px; height: 18px; border-radius: 50%; background: rgba(59,59,88,.10); }
+</style></head>
+<body>
+  <div id="flowers"></div>
+  <div class="frame"></div>
+  <div class="content">
+    <div class="eyebrow">Wet Lab meets Dry Lab</div>
+    <h1>allenphant</h1>
+    <div class="rule"></div>
+    <div class="who">Allen (JuiChun Wang) · NTU Biochem M.S.</div>
+    <div class="what">Lab automation, bio-image analysis,<br>and problem-solving through code.</div>
+  </div>
+  <div class="url">allenphant.github.io</div>
+  <div class="stage">
+    <div class="shadow"></div>
+    <img class="frieren" src="../../animation/frieren_idle_f1.png" alt="">
+    <img class="mimic" src="../../animation/mimic_closed_f0.png" alt="">
+  </div>
+<script>
+  // Fixed positions (not random) so the image is reproducible.
+  const F = [[792,52,34,.22,.3],[1100,96,26,.18,1.2],[700,470,22,.14,2.1],[1128,330,30,.16,.7],[858,160,20,.14,2.6],
+             [560,560,24,.12,1.6],[1040,560,22,.14,.4],[640,70,18,.10,2.9],[1150,520,18,.12,1.1],[930,40,22,.14,.9]];
+  const host = document.getElementById('flowers');
+  for (const [x,y,s,a,r] of F) { const i = new Image(); i.src='../../animation/flower_nobg_128.png'; i.className='flower';
+    Object.assign(i.style,{left:x+'px',top:y+'px',width:s+'px',height:s+'px',opacity:a,transform:`rotate(${r}rad)`}); host.appendChild(i); }
+</script>
+</body></html>
