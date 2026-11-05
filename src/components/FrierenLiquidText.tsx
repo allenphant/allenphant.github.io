@@ -6,32 +6,32 @@ import { getEllipseIntervalForBand } from '../../prototype/obstacle'
 import { BIO_PARAGRAPHS } from '../../prototype/text-content'
 
 // ─── Sprite imports ───────────────────────────────────────────────────────────
-import _idleF1Src      from '../../animation/frieren_idle_f1.svg?url'
-import _idleF3Src      from '../../animation/frieren_idle_f3.svg?url'
-import _glidingF2Src   from '../../animation/frieren_gliding_f2.svg?url'
-import _glidingF3Src   from '../../animation/frieren_gliding_f3.svg?url'
-import _dashingF0Src   from '../../animation/frieren_dashing_f0.svg?url'
-import _attackingF2Src from '../../animation/frieren_attacking_f2.svg?url'
-import _mimicClosedSrc   from '../../animation/mimic_closed_f0.svg?url'
-import _mimicChompF0Src  from '../../animation/mimic_chomping_f0.svg?url'
-import _mimicChompF1Src  from '../../animation/mimic_chomping_f1.svg?url'
-import _mimicChompF2Src  from '../../animation/mimic_chomping_f2.svg?url'
-import _mimicChompF3Src  from '../../animation/mimic_chomping_f3.svg?url'
-import _mimicChewF0Src   from '../../animation/mimic_chewing_f0.svg?url'
-import _mimicChewF1Src   from '../../animation/mimic_chewing_f1.svg?url'
-import _mimicChewF2Src   from '../../animation/mimic_chewing_f2.svg?url'
-import _mimicChewF3Src   from '../../animation/mimic_chewing_f3.svg?url'
-import _fernWalkF0Src    from '../../animation/fern_walk4_f0.svg?url'
-import _fernWalkF1Src    from '../../animation/fern_walk4_f1.svg?url'
-import _fernWalkF2Src    from '../../animation/fern_walk4_f2.svg?url'
-import _fernWalkF3Src    from '../../animation/fern_walk4_f3.svg?url'
-import _fernWalkF4Src    from '../../animation/fern_walk4_f4.svg?url'
-import _fernWalkF5Src    from '../../animation/fern_walk4_f5.svg?url'
-import _fernWalkF6Src    from '../../animation/fern_walk4_f6.svg?url'
-import _fernWalkF7Src    from '../../animation/fern_walk4_f7.svg?url'
-import _fernPullF0Src    from '../../animation/fern_pulling_f0.svg?url'
-import _fernPullF1Src    from '../../animation/fern_pulling_f1.svg?url'
-import _flowerSrc        from '../../animation/flower_nobg.png?url'
+import _idleF1Src      from '../../animation/frieren_idle_f1.png?url'
+import _idleF3Src      from '../../animation/frieren_idle_f3.png?url'
+import _glidingF2Src   from '../../animation/frieren_gliding_f2.png?url'
+import _glidingF3Src   from '../../animation/frieren_gliding_f3.png?url'
+import _dashingF0Src   from '../../animation/frieren_dashing_f0.png?url'
+import _attackingF2Src from '../../animation/frieren_attacking_f2.png?url'
+import _mimicClosedSrc   from '../../animation/mimic_closed_f0.png?url'
+import _mimicChompF0Src  from '../../animation/mimic_chomping_f0.png?url'
+import _mimicChompF1Src  from '../../animation/mimic_chomping_f1.png?url'
+import _mimicChompF2Src  from '../../animation/mimic_chomping_f2.png?url'
+import _mimicChompF3Src  from '../../animation/mimic_chomping_f3.png?url'
+import _mimicChewF0Src   from '../../animation/mimic_chewing_f0.png?url'
+import _mimicChewF1Src   from '../../animation/mimic_chewing_f1.png?url'
+import _mimicChewF2Src   from '../../animation/mimic_chewing_f2.png?url'
+import _mimicChewF3Src   from '../../animation/mimic_chewing_f3.png?url'
+import _fernWalkF0Src    from '../../animation/fern_walk4_f0.png?url'
+import _fernWalkF1Src    from '../../animation/fern_walk4_f1.png?url'
+import _fernWalkF2Src    from '../../animation/fern_walk4_f2.png?url'
+import _fernWalkF3Src    from '../../animation/fern_walk4_f3.png?url'
+import _fernWalkF4Src    from '../../animation/fern_walk4_f4.png?url'
+import _fernWalkF5Src    from '../../animation/fern_walk4_f5.png?url'
+import _fernWalkF6Src    from '../../animation/fern_walk4_f6.png?url'
+import _fernWalkF7Src    from '../../animation/fern_walk4_f7.png?url'
+import _fernPullF0Src    from '../../animation/fern_pulling_f0.png?url'
+import _fernPullF1Src    from '../../animation/fern_pulling_f1.png?url'
+import _flowerSrc        from '../../animation/flower_nobg_128.png?url'
 
 const idleF1Src      = _idleF1Src      as string
 const idleF3Src      = _idleF3Src      as string
@@ -241,6 +241,7 @@ export default function FrierenLiquidText() {
       hitmapCtx.clearRect(0, 0, size, size)
       hitmapCtx.save()
       if (facingLeft) { hitmapCtx.translate(size, 0); hitmapCtx.scale(-1, 1) }
+      hitmapCtx.imageSmoothingEnabled = false  // same as the on-screen sprite (pixel art)
       hitmapCtx.drawImage(img, 0, 0, size, size)
       hitmapCtx.restore()
       const data = hitmapCtx.getImageData(0, 0, size, size).data

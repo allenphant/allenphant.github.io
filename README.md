@@ -8,7 +8,7 @@ Personal portfolio site for [allenphant](https://github.com/allenphant).
 
 - [Astro](https://astro.build) — static site generator
 - [Tailwind CSS v4](https://tailwindcss.com) — styling
-- [React](https://react.dev) — interactive islands (project search, skill chart)
+- [React](https://react.dev) — interactive islands (project search, contact form, About-page animation)
 - GitHub GraphQL API — pulls repos, languages, and profile data at build time
 
 ## Local Development

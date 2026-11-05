@@ -7,13 +7,16 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-const currentPath = Astro.url.pathname;
+// Built pages live at "/about/" etc. while links are "/about": compare
+// without the trailing slash so the current page is actually highlighted.
+const normalize = (path: string) => (path.length > 1 ? path.replace(/\/+$/, "") : path);
+const currentPath = normalize(Astro.url.pathname);
 ---
 
 <nav class="fixed top-0 left-0 right-0 z-50 bg-[#F0EAE2]/95 backdrop-blur-sm border-b border-[#D9D0C8]">
   <div class="section-container flex items-center justify-between h-16">
     <!-- Logo -->
-    <a href="/" class="text-base font-light tracking-widest text-[#2D2D2D] hover:text-[#C5A059] transition-colors duration-300">
+    <a href="/" class="text-base font-light tracking-widest text-[#2D2D2D] hover:text-[#81642D] transition-colors duration-300">
       allenphant
     </a>
 
@@ -22,11 +25,12 @@ const currentPath = Astro.url.pathname;
       {navLinks.map((link) => (
         <a
           href={link.href}
+          aria-current={currentPath === link.href ? "page" : undefined}
           class:list={[
             "px-4 py-2 text-sm font-light tracking-wide transition-colors duration-200",
             currentPath === link.href
               ? "text-[#2D2D2D] border-b border-[#2D2D2D]"
-              : "text-[#9CA3AF] hover:text-[#2D2D2D]",
+              : "text-[#626A79] hover:text-[#2D2D2D]",
           ]}
         >
           {link.label}
@@ -37,8 +41,10 @@ const currentPath = Astro.url.pathname;
     <!-- Mobile Hamburger -->
     <button
       id="menu-toggle"
-      class="md:hidden p-2 text-[#9CA3AF] hover:text-[#2D2D2D] transition-colors"
+      class="md:hidden p-2 text-[#626A79] hover:text-[#2D2D2D] transition-colors"
       aria-label="Toggle menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
     >
       <svg id="menu-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
@@ -55,11 +61,12 @@ const currentPath = Astro.url.pathname;
       {navLinks.map((link) => (
         <a
           href={link.href}
+          aria-current={currentPath === link.href ? "page" : undefined}
           class:list={[
             "px-4 py-3 text-sm font-light tracking-wide transition-colors duration-200",
             currentPath === link.href
               ? "text-[#2D2D2D]"
-              : "text-[#9CA3AF] hover:text-[#2D2D2D]",
+              : "text-[#626A79] hover:text-[#2D2D2D]",
           ]}
         >
           {link.label}
@@ -76,13 +83,15 @@ const currentPath = Astro.url.pathname;
   const closeIcon = document.getElementById("close-icon");
 
   function closeMenu() {
+    toggle?.setAttribute("aria-expanded", "false");
     menu?.classList.add("hidden");
     menuIcon?.classList.remove("hidden");
     closeIcon?.classList.add("hidden");
   }
 
   toggle?.addEventListener("click", () => {
-    menu?.classList.toggle("hidden");
+    const open = menu?.classList.toggle("hidden") === false;
+    toggle.setAttribute("aria-expanded", String(open));
     menuIcon?.classList.toggle("hidden");
     closeIcon?.classList.toggle("hidden");
   });

@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import type { GitHubRepo } from "../lib/types";
 
 interface Props {
@@ -111,7 +110,7 @@ export default function ProjectSearch({ repos }: Props) {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#D9D0C8] rounded-[4px] text-[#2D2D2D] placeholder-[#9CA3AF] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-[#D9D0C8] rounded-[4px] text-[#2D2D2D] placeholder-[#626A79] text-sm font-light focus:outline-none focus:border-[#2D2D2D] transition-colors duration-200"
           />
         </div>
       </div>
@@ -121,7 +120,7 @@ export default function ProjectSearch({ repos }: Props) {
         {/* Type filters */}
         {availableTypes.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-[#9CA3AF] uppercase tracking-widest font-light w-12 shrink-0">Type</span>
+            <span className="text-[11px] text-[#626A79] uppercase tracking-widest font-light w-12 shrink-0">Type</span>
             <button
               onClick={() => setSelectedType(null)}
               className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
@@ -151,7 +150,7 @@ export default function ProjectSearch({ repos }: Props) {
         {/* Status filters */}
         {availableStatuses.length > 0 && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] text-[#9CA3AF] uppercase tracking-widest font-light w-12 shrink-0">Status</span>
+            <span className="text-[11px] text-[#626A79] uppercase tracking-widest font-light w-12 shrink-0">Status</span>
             <button
               onClick={() => setSelectedStatus(null)}
               className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
@@ -180,7 +179,7 @@ export default function ProjectSearch({ repos }: Props) {
 
         {/* Language filters */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] text-[#9CA3AF] uppercase tracking-widest font-light w-12 shrink-0">Lang</span>
+          <span className="text-[11px] text-[#626A79] uppercase tracking-widest font-light w-12 shrink-0">Lang</span>
           <button
             onClick={() => setSelectedLang(null)}
             className={`px-3 py-1 text-xs font-light tracking-wide transition-all duration-200 border rounded-[2px] ${
@@ -210,13 +209,13 @@ export default function ProjectSearch({ repos }: Props) {
 
       {/* Results count + clear */}
       <div className="flex items-center justify-between mb-6">
-        <p className="text-sm text-[#9CA3AF] font-light">
+        <p className="text-sm text-[#626A79] font-light">
           {filtered.length} project{filtered.length !== 1 ? "s" : ""} found
         </p>
         {hasActiveFilters && (
           <button
             onClick={clearAllFilters}
-            className="text-xs text-[#9CA3AF] hover:text-[#2D2D2D] transition-colors duration-200 font-light"
+            className="text-xs text-[#626A79] hover:text-[#2D2D2D] transition-colors duration-200 font-light"
           >
             Clear all filters
           </button>
@@ -225,23 +224,17 @@ export default function ProjectSearch({ repos }: Props) {
 
       {/* Project Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <AnimatePresence mode="popLayout">
           {filtered.map((repo) => {
             const statusTag = getStatusTag(repo.topics);
             const typeTags = getTypeTags(repo.topics);
 
             return (
-              <motion.a
+              <a
                 key={repo.name}
                 href={repo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                className="group card-hover p-6 flex flex-col gap-3 h-full"
+                className="group card-hover card-enter p-6 flex flex-col gap-3 h-full"
               >
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3">
@@ -255,7 +248,7 @@ export default function ProjectSearch({ repos }: Props) {
                       </span>
                     )}
                     <svg
-                      className="w-4 h-4 text-[#9CA3AF] group-hover:text-[#2D2D2D] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      className="w-4 h-4 text-[#626A79] group-hover:text-[#2D2D2D] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -276,7 +269,7 @@ export default function ProjectSearch({ repos }: Props) {
                 </p>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between text-xs text-[#9CA3AF] mt-auto">
+                <div className="flex items-center justify-between text-xs text-[#626A79] mt-auto">
                   <div className="flex items-center gap-3">
                     {repo.primaryLanguage && (
                       <span className="flex items-center gap-1.5">
@@ -314,10 +307,9 @@ export default function ProjectSearch({ repos }: Props) {
                     ))}
                   </div>
                 )}
-              </motion.a>
+              </a>
             );
           })}
-        </AnimatePresence>
       </div>
 
       {filtered.length === 0 && (

@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Noto Sans JP — Latin subset only (variable font, weights 300–500).
+   SIL Open Font License 1.1: public/fonts/OFL.txt */
+@font-face {
+  font-family: "Noto Sans JP";
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: swap;
+  src: url("/fonts/noto-sans-jp-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @theme {
   /* Colors — light mode */
   --color-bg-primary: #F0EAE2;
@@ -7,15 +18,20 @@
 
   --color-text-primary: #2D2D2D;
   --color-text-secondary: #5A5A5A;
-  --color-text-muted: #9CA3AF;
+  --color-text-muted: #626A79;   /* 4.56:1 on bg-primary, 5.44:1 on white (WCAG AA) */
 
-  --color-accent: #C5A059;
+  --color-accent: #C5A059;      /* decorative only; for text use --color-accent-text */
+  --color-accent-text: #81642D; /* 4.63:1 on bg-primary, 5.53:1 on white */
 
   --color-border-strong: #D9D0C8;
   --color-border-subtle: #E8DDD4;
 
   /* Typography */
-  --font-sans: "Noto Sans JP", "Inter", ui-sans-serif, system-ui, sans-serif;
+  /* Latin text uses the self-hosted Noto Sans JP Latin subset below. CJK
+     text (e.g. Chinese repo descriptions) falls back to the system's
+     Traditional Chinese fonts instead of downloading Noto Sans JP's CJK
+     slices from Google Fonts, which cost ~2.9 MB on the Projects page. */
+  --font-sans: "Noto Sans JP", "PingFang TC", "Hiragino Sans", "Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", "Georgia", serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
@@ -60,6 +76,21 @@
   transition: border-color 300ms ease;
   &:hover {
     border-color: #2D2D2D;
+  }
+}
+
+/* Fade/scale-in for project cards as they appear (replaces framer-motion).
+   Cards that stay visible while filtering keep their React key, so only
+   newly shown cards animate. */
+@keyframes card-enter {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@utility card-enter {
+  animation: card-enter 300ms ease-out both;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 }
 

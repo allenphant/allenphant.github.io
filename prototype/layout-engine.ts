@@ -76,7 +76,7 @@ export function layoutColumn(
     // both — exactly like water parting around a rock.
     for (const slot of slots) {
       const slotWidth = slot.right - slot.left
-      const line = layoutNextLine(prepared, cursor, slotWidth)
+      const line = layoutNextLine(prepared, slotWidth, cursor)
       if (line === null) {
         exhausted = true
         break

@@ -37,7 +37,7 @@ CVwebsite/
 │   │   ├── Footer.astro        ← 頁尾
 │   │   ├── ProjectCard.astro   ← 專案卡片（靜態版）
 │   │   ├── ProjectSearch.tsx   ← 專案搜尋篩選（React 互動）
-│   │   ├── SkillChart.tsx      ← 語言分佈甜甜圈圖（React 互動）
+│   │   ├── SkillChart.astro    ← 語言分佈甜甜圈圖（建置時產生的 SVG，不需 JS）
 │   │   └── ContactForm.tsx     ← 聯絡表單（React 互動）
 │   ├── data/
 │   │   └── projects.json       ← 精選/隱藏 repo 設定
@@ -247,7 +247,7 @@ const skillCategories = [
 | 29 | `https://github.com/allenphant` | GitHub 連結 |
 | 40 | `https://linkedin.com/in/allenphant` | LinkedIn 連結。**改成你的網址** |
 
-**Formspree 表單設定**：見 `src/components/ContactForm.tsx` 第 14 行，把 `YOUR_FORM_ID` 換成你在 Formspree 建立的表單 ID。
+**Formspree 表單設定**：不用改程式碼。到 GitHub repo 的 Settings → Secrets and variables → Actions → **Variables** 新增 `FORMSPREE_ID`（填表單 ID），重新部署即可。未設定時，表單會改為開啟訪客的郵件程式。
 
 ---
 
@@ -296,18 +296,18 @@ const roles = [
 | 181 | `.slice(0, 3)` | 搜尋結果卡片最多顯示 3 個 topics |
 | 196-199 | `No projects found...` | 搜尋無結果時的提示文字 |
 
-### 6-D：技能圖表（`src/components/SkillChart.tsx`）
+### 6-D：技能圖表（`src/components/SkillChart.astro`）
 
-| 行數 | 內容 | 說明 |
-|------|------|------|
-| 17 | `.slice(0, 10)` | 甜甜圈圖最多顯示幾種語言 |
-| 47 | `cutout: "70%"` | 甜甜圈的中心空洞大小 |
+| 內容 | 說明 |
+|------|------|
+| `languages.slice(0, 10)` | 甜甜圈圖最多顯示幾種語言（其餘併入 Other） |
+| `const INNER = OUTER * 0.65` | 甜甜圈的中心空洞大小（0.65 = 65%） |
 
 ### 6-E：聯絡表單（`src/components/ContactForm.tsx`）
 
 | 行數 | 內容 | 說明 |
 |------|------|------|
-| 14 | `https://formspree.io/f/YOUR_FORM_ID` | **Formspree 表單 endpoint**。替換 `YOUR_FORM_ID` |
+| — | `PUBLIC_FORMSPREE_ID` | **Formspree 表單 ID**，建置時讀取。到 repo Settings → Secrets and variables → Actions → Variables 新增 `FORMSPREE_ID`；未設定時表單改為開啟訪客的郵件程式 |
 | 39 | `Message Sent!` | 送出成功的標題 |
 | 40 | `Thanks for reaching out...` | 送出成功的描述 |
 | 111-113 | `Something went wrong...` | 送出失敗的提示 |
@@ -537,7 +537,7 @@ schedule:
 | Email 地址（聯絡頁） | `src/pages/contact.astro` | 20 |
 | GitHub 連結（聯絡頁） | `src/pages/contact.astro` | 29 |
 | LinkedIn 連結（聯絡頁） | `src/pages/contact.astro` | 40 |
-| Formspree 表單 ID | `src/components/ContactForm.tsx` | 14 |
+| Formspree 表單 ID | repo Variables `FORMSPREE_ID`（不在程式碼裡） | — |
 | 網站 URL | `astro.config.mjs` | 11 |
 
 ### 改視覺

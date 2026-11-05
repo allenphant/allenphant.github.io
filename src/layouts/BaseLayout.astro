@@ -1,4 +1,6 @@
 ---
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import "../styles/global.css";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
@@ -16,7 +18,12 @@ const {
 } = Astro.props;
 
 const siteTitle = `${title} | allenphant`;
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site || "https://allenphant.github.io");
+const siteUrl = Astro.site || "https://allenphant.github.io";
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
+// Social previews need an absolute image URL. Only emit the image tags when
+// the file is actually in public/, so they never point at a 404.
+const hasOgImage = /^https?:\/\//.test(ogImage) || existsSync(join(process.cwd(), "public", ogImage));
+const ogImageUrl = hasOgImage ? new URL(ogImage, siteUrl).href : null;
 ---
 
 <!doctype html>
@@ -31,22 +38,26 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site || "https://allenpha
     <meta property="og:type" content="website" />
     <meta property="og:title" content={siteTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={ogImage} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
     <meta property="og:url" content={canonicalUrl} />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content={ogImageUrl ? "summary_large_image" : "summary"} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
     <meta name="twitter:title" content={siteTitle} />
     <meta name="twitter:description" content={description} />
 
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-    <!-- Google Fonts -->
+    <!-- Body font: self-hosted Latin subset of Noto Sans JP (see global.css) -->
+    <link rel="preload" href="/fonts/noto-sans-jp-latin.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Google Fonts (headings + mono) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400;1,600&family=Noto+Sans+JP:wght@300;400;500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,300;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
 
